@@ -24,6 +24,12 @@ Free-plan limits: polling uses a few database commands per player per second, wh
 
 ## Solo, multiplayer and the leaderboard
 
+**Difficulty:** Solo can be Easy, Medium or Hard. Multiplayer is Medium or Hard only, and its storms are about 20% stronger (and last longer) than in solo play. Each difficulty has its own leaderboard.
+
+**Lobbies:** multiplayer puts up to 5 astronauts in a lobby; when a lobby is full, the next player starts a new one.
+
+**Badges:** finishing a mission (every crate delivered) earns badges for the difficulty, speed (under 36, 26 or 18 mission hours) and health (low radiation, oxygen never below 25%, hull never below 50%, no suit damage, 90% of food delivered), plus explorer badges. Badges are saved on the player's device.
+
 A loading screen leads to a start screen where you pick **Solo** or **Multiplayer**. Every game uses the same map, so times are comparable: finish a mission that delivers every food crate and your mission time is posted to the **world leaderboard** of fastest crews (your best time is kept). The leaderboard and multiplayer work on the claude.ai version (signed in) and on a Vercel deployment (see above); on plain static hosting like GitHub Pages the game plays solo and remembers your best time on that device.
 
 ## Online multiplayer
