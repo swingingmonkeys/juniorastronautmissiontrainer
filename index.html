@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Supply Run to Bravo – Mars Mission Trainer</title>
+<title>Supply Run to Bravo – Henhen Mars Mission Trainer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
@@ -112,6 +112,15 @@ kbd{font-family:var(--pixel);font-size:11px;opacity:.7;margin-left:3px}
 .ctrl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:15px}
 .ctrl kbd{font-size:14px;opacity:1;background:var(--track);padding:1px 6px;border-radius:4px;margin:0}
 body.hide-gauges #side{display:none}
+#card .modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#card .mode{text-align:left;padding:14px 16px;font-size:18px}
+#card .mode b{font-family:var(--pixel);font-size:24px;font-weight:700;display:block}
+#card .mode small{display:block;font-size:14px;margin-top:4px;opacity:.85}
+#card table.lb{width:100%;border-collapse:collapse;font-size:15px}
+#card table.lb th{text-align:left;font-family:var(--pixel);font-weight:500;border-bottom:2px solid var(--line);padding:6px}
+#card table.lb td{padding:6px;border-bottom:1px solid var(--line)}
+#card table.lb tr.me td{background:rgba(42,143,135,.15);font-weight:700}
+@media (max-width:520px){ #card .modes{grid-template-columns:1fr} }
 #card.wide{width:min(900px,100%)}
 #card .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
 #card .opt{text-align:left;padding:9px 11px;font-size:15px}
@@ -125,15 +134,23 @@ body.hide-gauges #side{display:none}
 .segs i{height:11px;background:var(--track);border-radius:2px}
 .segs i.f{background:var(--rust)}
 @media (max-width:620px){ .gwrap{grid-template-columns:1fr} .stat{grid-template-columns:120px 1fr;font-size:13px} }
-#hotbar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 62px);display:flex;gap:4px;align-items:center;padding:4px;background:var(--panel);border:2px solid var(--line);border-radius:8px}
-#hotbar .slot{position:relative;width:46px;height:46px;padding:0;display:flex;align-items:center;justify-content:center}
+#hotbar{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 24px));max-height:calc(100% - 200px);overflow:auto;padding:12px;background:var(--panel);border:3px solid var(--line);border-radius:10px;z-index:3}
+#hotbar[hidden]{display:none}
+#hotbar .ihead{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+#hotbar .ihead b{font-family:var(--pixel);font-size:20px;font-weight:500}
+#hotbar .ihead span{flex:1;color:var(--muted);font-size:14px}
+#hotbar .igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px}
+#hotbar .slot{position:relative;height:78px;padding:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 #hotbar .slot img{width:30px;height:30px;image-rendering:pixelated}
-#hotbar .slot b{position:absolute;right:3px;bottom:1px;font-size:12px;text-shadow:0 0 3px var(--panel)}
-#hotbar .slot kbd{position:absolute;left:3px;top:1px;margin:0;font-size:10px}
+#hotbar .slot b{position:absolute;right:5px;top:3px;font-size:13px}
+#hotbar .slot kbd{position:absolute;left:5px;top:3px;margin:0;font-size:10px}
+#hotbar .slot small{font-size:11.5px;line-height:1.15;text-align:center}
 #hotbar .slot.on{border-color:var(--rust);box-shadow:0 0 0 2px var(--rust)}
 #hotbar .slot.empty img{opacity:.35}
-#hotbar .iron{display:flex;align-items:center;gap:3px;font-weight:700;font-size:13px;padding:0 4px}
+#hotbar .imats{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px}
+#hotbar .iron{display:flex;align-items:center;gap:5px;font-weight:700;font-size:13px}
 #hotbar .iron img{width:22px;height:22px;image-rendering:pixelated}
+#hotbar .ihint{margin:8px 0 0;font-size:13px;color:var(--muted)}
 #card .sw{width:22px;height:22px;vertical-align:-5px;image-rendering:pixelated}
 #track .cvm{position:absolute;top:2px;width:8px;height:8px;margin-left:-4px;background:#1c1c22;border:2px solid #c9ced8;border-radius:50%}
 #track .bcn{position:absolute;top:-4px;width:10px;height:10px;margin-left:-5px;background:#2a8f87;border:2px solid #fff;transform:rotate(45deg)}
@@ -151,7 +168,7 @@ body.hide-gauges #side{display:none}
   body.show-gauges #side{display:flex;bottom:auto;top:calc(env(safe-area-inset-top,0px) + 110px);right:10px;width:230px}
   #trip{width:calc(100vw - 20px);top:calc(env(safe-area-inset-top,0px) + 54px)}
   #alert{top:calc(env(safe-area-inset-top,0px) + 150px);font-size:15px}
-  #hotbar .slot{width:31px;height:38px} #hotbar .slot img{width:20px;height:20px} #hotbar .slot kbd{display:none} #hotbar .iron{display:none}
+  #hotbar .igrid{grid-template-columns:repeat(4,1fr)} #hotbar .slot{height:66px} #hotbar .slot kbd{display:none}
 }
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
@@ -172,6 +189,7 @@ body.hide-gauges #side{display:none}
     <button id="bHelp" title="Controls">Help</button>
     <button id="bGauges" title="Show or hide gauges">Gauges</button>
     <button id="bMusic" title="Music on or off (M)">Music</button>
+    <button id="bOnline" hidden>Online: 1</button>
   </div>
 
   <div id="side">
@@ -201,7 +219,7 @@ body.hide-gauges #side{display:none}
       <div id="crates"></div>
       <dl class="kv">
         <dt>On board</dt><dd id="cDays">0 crates</dd>
-        <dt>Left at Base Alpha</dt><dd id="cAlpha">16 crates</dd>
+        <dt>Left at Base Alpha</dt><dd id="cAlpha">20 crates</dd>
         <dt>Delivered to Bravo (crew-days)</dt><dd id="cBravo">0</dd>
         <dt>Cargo bay temperature</dt><dd id="cTemp">5 °C</dd>
         <dt>Cargo straps</dt><dd id="cStrap">100%</dd>
@@ -246,6 +264,7 @@ const FLARES=[
 ];
 
 /* ============ WORLD ============ */
+const WORLD_SEED=20261114;
 const W=1400,H=96,X0=56,XEND=1366;
 const BKM=MARS.routeKm/(XEND-X0);
 const kmAt=x=>(x-X0)*BKM;
@@ -574,16 +593,16 @@ const DEPTH_SHADE=Array.from({length:16},(_,i)=>`rgba(22,8,6,${Math.min(.68,i*.0
 function newGame(){
   const seed=(Math.random()*1e9)|0;
   tubeX0=0;tubeX1=0;
-  gen(seed);
+  gen(WORLD_SEED);   // same map for everyone so online players share one world
   G={seed,R:rng(seed+7),state:'title',paused:true,t:0,startClock:12*60+30,tau:.5,storm:null,flare:null,devil:null,devilDone:false,
-     events:new Set(),msgs:[],warp:1,eva:false,mode:'dig',sel:4,suit:100,shR:false,shA:false,fill:null,roofLight:1,roofShield:0,crafted:0,placed:0,dug:0,beacons:[],stormsSealed:0,stormsHit:0,lamps:[],
+     events:new Set(),msgs:[],invOpen:false,warp:1,eva:false,mode:'dig',sel:4,suit:100,shR:false,shA:false,fill:null,roofLight:1,roofShield:0,crafted:0,placed:0,dug:0,beacons:[],stormsSealed:0,stormsHit:0,lamps:[],
      inv:{regolith:0,basalt:0,sand:0,ice:0,iron:0,brick:8,glass:0,plate:2,door:0,lamp:2,beacon:0,ladder:4,titanium:0,opal:0,meteorite:0},
      pack:{o2:2,kits:1,insul:0},alpha:Array(FOOD_TOTAL).fill(100),bravo:[],legs:0,trips:0,upgrades:0,leg:null,docked:'alpha',leftZone:false,loadN:null,cavesSeen:new Set(),rare:0,dockT:0,kits:1,loss:{impact:0,cold:0,radiation:0,dust:0},
      particles:[],streaks:[],glitch:0,shake:0,flash:0,driftT:0,stuckWarned:false,lastRockCol:-1,toastT:{},task:null,
-     hardLandings:0,faultsSeen:0,shelteredFlare:false,arrived:false,cam:{x:X0+6,y:36},maxDose:0,
+     play:'solo',hardLandings:0,faultsSeen:0,shelteredFlare:false,arrived:false,cam:{x:X0+6,y:36},maxDose:0,
      cfg:(G&&G.cfg)?G.cfg:{chassis:'std',wheels:'alu',susp:'rocker',motor:'bal',power:'solar',hull:'basic'}};
   rv={x:X0,y:floorA[X0],vx:0,vy:0,air:false,pitch:0,rot:0,hull:100,wheels:100,elec:100,dust:.05,batt:28,battMax:28,o2:.10,
-      strap:100,heater:true,safe:false,stowed:false,cargoT:5,insul:false,water:false,crates:[],lvl:0,dir:1,
+      strap:100,heater:true,safe:false,stowed:false,cargoT:5,insul:false,water:false,crates:[],lvl:0,battLvl:0,dir:1,
       faults:{nav:0,heater:false,motor:false,comms:false},massF:1,dose:0,hullMax:100,throttle:0};
   rv.parts=cfgParts(G.cfg); rv.lvl=0; rv.dir=1; buildRoverBody(X0,1);
   as={x:0,y:0,vx:0,vy:0,w:.7,h:1.7,face:1,onGround:false};
@@ -615,18 +634,33 @@ function eventCard({title,who,body,data,choices,after}){
 
 function titleCard(){
   openCard(`<h1>Supply Run to Bravo</h1>
+  <p style="font-family:var(--pixel);font-size:22px;margin:0 0 8px;color:var(--teal)">Henhen Mars Mission Trainer</p>
   <p class="who">A Junior Astronaut Mission Trainer by The Royal Beauties, NASA Space Apps Challenge 2026</p>
-  <p>Base Alpha is shutting down. You and your crewmate have one job: move <b>all 16 crates of food</b> 24 km across Mars to Base Bravo. Your rover can only carry 300 kg at a time, so you’ll make several trips, unless you explore deep caves for rare minerals and build a bigger rover.</p>
+  <p>Base Alpha is shutting down. You and your crewmate have one job: move <b>all 20 crates of food</b> 24 km across Mars to Base Bravo. Your rover can only carry 200 kg at a time, so you’ll make several trips, unless you explore deep caves for rare minerals and build a bigger rover.</p>
   <p>The numbers in this game come from real Mars missions: how much oxygen people breathe, how much sunlight reaches Mars, how strong the radiation is, and what dust storms and solar flares did to real rovers.</p>
-  <p>First you’ll design your rover in the garage. Then watch your oxygen and battery, keep the food safe, and get everyone to Bravo.</p>
-  <div class="row"><button class="primary" id="bStart">Build your rover</button><button id="bHowTo">How to play</button><button id="bMus">Music: ${Music.on?'on':'off'}</button></div>`,c=>{
-    c.querySelector('#bStart').onclick=()=>{ Music.start(); garageCard(); }; c.querySelector('#bHowTo').onclick=()=>{ Music.start(); helpCard(titleCard); };
+  <p>First you’ll design your rover in the garage. Then watch your oxygen and battery, keep the food safe, and race to get everything to Bravo. The fastest crews make the world leaderboard.</p>
+  <p id="tOnline" style="font-size:15px;color:var(--teal);font-weight:700"></p>
+  <label style="display:block;font-size:15px;margin-top:10px">Your callsign <input id="iName" maxlength="16" value="${esc(NET.name)}" style="font:inherit;padding:6px 8px;border:2px solid var(--line);border-radius:6px;background:var(--btn);color:var(--btn-text);margin-left:6px;width:12em"></label>
+  <h3>Choose how to play</h3>
+  <div class="modes">
+    <button class="mode primary" id="bSolo"><b>Solo</b><small>Just you and your crewmate on Mars.</small></button>
+    <button class="mode" id="bMulti"><b>Multiplayer</b><small>Share Mars with everyone online. See their rovers and build together.</small></button>
+  </div>
+  <div class="row"><button id="bLB">Leaderboard</button><button id="bHowTo">How to play</button><button id="bMus">Music: ${Music.on?'on':'off'}</button></div>`,c=>{
+    c.querySelector('#iName').addEventListener('change',e=>setCallsign(e.target.value));
+    c.querySelector('#iName').addEventListener('keydown',e=>e.stopPropagation());
+    netUI();
+    c.querySelector('#bSolo').onclick=()=>{ setCallsign(c.querySelector('#iName').value); Music.start(); netLeave(); G.play='solo'; lobbyMode('solo'); garageCard(); };
+    const bm=c.querySelector('#bMulti');
+    bm.onclick=()=>{ setCallsign(c.querySelector('#iName').value); Music.start(); bm.dataset.busy='1'; bm.disabled=true; bm.querySelector('small').textContent='Connecting…';
+      netJoin().then(ok=>{ delete bm.dataset.busy; if(ok){ G.play='multi'; lobbyMode('multi'); garageCard(); } else { bm.querySelector('small').textContent='Couldn’t connect. Multiplayer needs claude.ai and a signed-in account.'; } }); };
+    c.querySelector('#bLB').onclick=()=>leaderboardCard(titleCard); c.querySelector('#bHowTo').onclick=()=>{ Music.start(); helpCard(titleCard); };
     const mb=c.querySelector('#bMus'); mb.onclick=()=>{ const on=Music.toggle(); mb.textContent='Music: '+(on?'on':'off'); syncMusicBtn(); };
   });
 }
 
 const PACK=[
- {k:'o2',name:'Oxygen tank',mass:14,max:4,desc:'+0.25 kg of oxygen, about 3.6 more hours for 2 people.'},
+ {k:'o2',name:'Oxygen tank',mass:14,max:4,desc:'+0.35 kg of oxygen, about 5 more hours for 2 people.'},
  {k:'kits',name:'Repair kit',mass:8,max:4,desc:'Patches a leaking hull or fixes damaged wheels on an EVA.'},
  {k:'insul',name:'Cargo insulation blanket',mass:15,max:1,desc:'Keeps the food crates from freezing if the cargo heater fails.'},
 ];
@@ -645,7 +679,7 @@ function packCard(){
       const m=packMass(); c.querySelector('#capFill').style.width=(m/CAP*100)+'%';
       c.querySelector('#capTxt').textContent=`Payload ${m} of ${CAP} kg`;
       PACK.forEach(it=>c.querySelector('#pk_'+it.k).textContent=pack[it.k]);
-      const o2=.10+pack.o2*.25, hrs=o2/O2_PER_HOUR;
+      const o2=.25+pack.o2*.35, hrs=o2/O2_PER_HOUR;
       c.querySelector('#packEst').innerHTML=`<b>Planning check.</b> Two people breathe about ${fmt(MARS.o2PerPersonDay*2,2)} kg of oxygen a day (${fmt(O2_PER_HOUR,3)} kg per hour). With ${fmt(o2,2)} kg aboard you have about <b>${fmt(hrs,1)} hours</b> of air. The drive takes about 2.5 hours if nothing goes wrong. Your rover’s battery holds ${cfgParts(G.cfg).power.batt} kWh.`;
     };
     c.querySelectorAll('.step button').forEach(b=>b.onclick=()=>{
@@ -672,11 +706,15 @@ function helpCard(back){
   <p style="font-size:15px">The rover has real suspension: each wheel has a spring and damper. Flooring it lifts the nose, braking dips it, and hitting a crest fast will launch you. Ease off before drops so the springs don’t bottom out.</p>
   <h3>On an EVA (spacewalk on Mars)</h3>
   <div class="ctrl"><kbd>A / D</kbd><span>Walk</span><kbd>W / Space</kbd><span>Jump (low gravity!)</span><kbd>Click / tap</kbd><span>Dig a block (hold)</span>
-  <kbd>1 – 0 / wheel</kbd><span>Pick a block from the hotbar</span><kbd>Right click</kbd><span>Place the block (or switch Dig/Build with Q)</span><kbd>C</kbd><span>Fabricator: craft bricks, glass, metal plates, doors, lamps and beacons (near the rover)</span><kbd>Shift + 1 – 5</kbd><span>Repair jobs when you stand next to the rover</span><kbd>E</kbd><span>Climb back in</span></div>
+  <kbd>I</kbd><span>Open or close your inventory (holds 40 items)</span><kbd>1 – 0 / wheel</kbd><span>Pick a block</span><kbd>Right click</kbd><span>Place the block (or switch Dig/Build with Q)</span><kbd>C</kbd><span>Fabricator: craft bricks, glass, metal plates, doors, lamps and beacons (near the rover)</span><kbd>Shift + 1 – 5</kbd><span>Repair jobs when you stand next to the rover</span><kbd>E</kbd><span>Climb back in</span></div>
   <h3>The mission</h3>
-  <p>Move all 16 food crates from Base Alpha to Base Bravo. The rover only carries 300 kg at first, so you’ll drive back and forth. Stop next to a base to dock: the crew refuels and repairs you, and you load or unload food. Press U to turn the rover around.</p>
+  <p>Move all 20 food crates from Base Alpha to Base Bravo. The rover only carries 200 kg at first, and your pack holds only 40 items, so you’ll drive back and forth. Stop next to a base to dock: the crew refuels and repairs you, and you load or unload food. Press U to turn the rover around.</p>
   <h3>Caves and a bigger rover</h3>
   <p>Look for CAVE signs with ladders going down. Deep in the caves you’ll find rare titanium ore, opal and buried meteorites. Bring them to a base workshop to build bigger cargo racks, so you need fewer trips. On a ladder, W climbs up and S climbs down.</p>
+  <h3>Solo, multiplayer and the leaderboard</h3>
+  <p>Pick Solo or Multiplayer on the start screen. Everyone plays the same map, and missions that deliver every crate post their mission time to the world leaderboard. Fastest time wins.</p>
+  <h3>Playing online</h3>
+  <p>In Multiplayer, everyone playing at the same time shares one Mars. You’ll see other crews’ rovers and astronauts with their callsigns, and their digging and building appears in your world while they’re online. The Online button shows who’s playing. Each crew still runs its own food mission.</p>
   <h3>Building shelters</h3>
   <p>When a storm warning comes in, wall in the rover and give it a roof. Any solid block keeps sand out, airlock doors let you walk through, ice blocks are extra good against radiation, and glass in the roof lets sunlight reach your panels. A red glow shows where the shelter is still open; green means sealed.</p>
   <h3>Keep the mission alive</h3>
@@ -709,13 +747,13 @@ function dataCard(){
 }
 function pauseCard(){
   openCard(`<h2>Paused</h2><p>Mission time ${clockStr()}. ${G.alpha.length} crates still at Alpha, ${rv.crates.length} on the rover.</p>
-  <div class="row"><button class="primary" id="bRes">Resume</button><button id="bH">How to play</button><button id="bRe">Restart mission</button></div>`,c=>{
-    c.querySelector('#bRes').onclick=closeCard; c.querySelector('#bH').onclick=()=>helpCard(pauseCard);
+  <div class="row"><button class="primary" id="bRes">Resume</button><button id="bH">How to play</button><button id="bLBp">Leaderboard</button><button id="bRe">Restart mission</button></div>`,c=>{
+    c.querySelector('#bRes').onclick=closeCard; c.querySelector('#bH').onclick=()=>helpCard(pauseCard); c.querySelector('#bLBp').onclick=()=>leaderboardCard(pauseCard);
     c.querySelector('#bRe').onclick=()=>{ c.innerHTML=`<h2>Restart?</h2><p>You’ll lose this drive and start over at Base Alpha.</p><div class="row"><button class="primary" id="y">Restart</button><button id="n">Keep driving</button></div>`;
       c.querySelector('#y').onclick=restart; c.querySelector('#n').onclick=pauseCard; };
   });
 }
-function restart(){ $('feed').innerHTML=''; $('hud').hidden=true; newGame(); titleCard(); }
+function restart(){ $('feed').innerHTML=''; $('hud').hidden=true; newGame(); lobbyMode('menu'); titleCard(); }
 
 /* ============ EVENTS ALONG THE ROUTE ============ */
 const ROUTE_EVENTS=[
@@ -837,6 +875,8 @@ addEventListener('keydown',e=>{
   else if(e.code==='KeyO') togglePanels();
   else if(e.code==='KeyT') toggleWarp();
   else if(e.code==='KeyQ') { G.mode=G.mode==='dig'?'place':'dig'; buildControls(); }
+  else if(e.code==='KeyI') toggleInv();
+  else if(e.code==='Escape'&&G.invOpen) toggleInv(false);
   else if(e.code==='KeyP'||e.code==='Escape') pauseCard();
   else if(e.code==='KeyM'){ Music.toggle(); syncMusicBtn(); }
   else if(/^Digit[0-9]$/.test(e.code)&&G.eva){
@@ -902,7 +942,8 @@ function buildControls(){
       `<button data-act="turn">Turn around<kbd>U</kbd></button>`;
   } else {
     c.innerHTML=holdBtn('◀ Walk','back','big','A')+holdBtn('Jump','jump','big','W')+holdBtn('Walk ▶','fwd','big','D')+
-      `<button data-act="mode" class="on">${G.mode==='dig'?'Dig mode':'Build mode'}<kbd>Q</kbd></button>`+
+      `<button data-act="mode" class="on">${G.mode==='dig'?'Dig mode':`Build: ${ITEMS[HOTBAR[G.sel]].name} ×${G.inv[HOTBAR[G.sel]]}`}<kbd>Q</kbd></button>`+
+      `<button data-act="inv" class="${G.invOpen?'on':''}">Inventory<kbd>I</kbd></button>`+
       `<button data-act="craft">Craft<kbd>C</kbd></button>`+
       `<button data-act="eva">Back in rover<kbd>E</kbd></button>`;
   }
@@ -915,7 +956,7 @@ function buildControls(){
   c.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>{
     const a=b.dataset.act;
     if(a==='safe') setSafe(!rv.safe); else if(a==='eva') toggleEVA(); else if(a==='heat') toggleHeater();
-    else if(a==='panels') togglePanels(); else if(a==='warp') toggleWarp(); else if(a==='mode'){ G.mode=G.mode==='dig'?'place':'dig'; } else if(a==='craft'){ craftCard(); return; } else if(a==='turn'){ turnAround(); return; }
+    else if(a==='panels') togglePanels(); else if(a==='warp') toggleWarp(); else if(a==='mode'){ G.mode=G.mode==='dig'?'place':'dig'; } else if(a==='inv'){ toggleInv(); return; } else if(a==='craft'){ craftCard(); return; } else if(a==='turn'){ turnAround(); return; }
     buildControls();
   }));
 }
@@ -931,6 +972,7 @@ $('bPause').onclick=()=>G.state==='play'&&pauseCard();
 $('bData').onclick=()=>G.state==='play'&&dataCard();
 $('bHelp').onclick=()=>G.state==='play'&&helpCard();
 function syncMusicBtn(){ const b=$('bMusic'); b.classList.toggle('on',Music.on); b.textContent=Music.on?'Music on':'Music off'; }
+$('bOnline').onclick=()=>G.state==='play'&&rosterCard();
 $('bMusic').onclick=()=>{ Music.toggle(); syncMusicBtn(); };
 syncMusicBtn();
 $('bGauges').onclick=()=>{ if(innerWidth<=560) document.body.classList.toggle('show-gauges'); else document.body.classList.toggle('hide-gauges'); };
@@ -1003,8 +1045,10 @@ let dig={tx:-1,ty:-1,p:0};
 function mouseTile(){ const wx=(ptr.x-VW/2)/TS+G.cam.x, wy=(ptr.y-VH/2)/TS+G.cam.y; return [Math.floor(wx),Math.floor(wy)]; }
 function reachOK(tx,ty){ const cx=as.x+as.w/2, cy=as.y+as.h/2; return Math.hypot(tx+.5-cx,ty+.5-cy)<=4.6; }
 function overlapsRover(tx,ty){ const [a,b]=roverBounds(); return tx+1>a-.3&&tx<b+.3&&ty+1>rv.y-4.1&&ty<rv.y; }
+const INV_MAX=40;
 function updDig(dt){
   if(!G.eva||!ptr.down||ptr.btn!==0||G.mode!=='dig'||G.task){ dig.p=0; return; }
+  if(invTotal()>=INV_MAX){ dig.p=0; sayOnce('full',6,'Suit',`Your pack is full (${INV_MAX} items). Place blocks, craft something, or use them up before you dig more.`,'warn'); return; }
   const [tx,ty]=mouseTile(); const t=getT(tx,ty);
   if(t===T.AIR||!reachOK(tx,ty)){ dig.p=0; return; }
   const hard=HARD[t]; if(!hard){ sayOnce('hard',4,'Suit','That’s too tough to dig with a hand tool.'); return; }
@@ -1013,7 +1057,7 @@ function updDig(dt){
   if(Math.random()<.4) puff(tx+.5,ty+.5,tileColor(t),1);
   if(dig.p>=1){
     const it=(t===T.WR||t===T.WL)?DROP[matA[ty*W+tx]||T.DUST]:DROP[t];
-    setT(tx,ty,T.AIR); if(ty>=floorA[tx]&&roofTop[tx]<0&&bgA[ty*W+tx]!==2) bgA[ty*W+tx]=1;
+    setT(tx,ty,T.AIR); netEdit(tx,ty,T.AIR); if(ty>=floorA[tx]&&roofTop[tx]<0&&bgA[ty*W+tx]!==2) bgA[ty*W+tx]=1;
     if(t===T.BEACON) G.beacons=G.beacons.filter(b=>!(b.x===tx&&b.y===ty));
     if(it){ G.inv[it]++; G.dug++; }
     dig.p=0; puff(tx+.5,ty+.5,tileColor(t),8);
@@ -1031,7 +1075,7 @@ function placeBlock(){
   if(!reachOK(tx,ty)||getT(tx,ty)!==T.AIR) return;
   if(collides(as.x,as.y,as.w,as.h)||(tx+1>as.x&&tx<as.x+as.w&&ty+1>as.y&&ty<as.y+as.h)) return;
   if(overlapsRover(tx,ty)){ sayOnce('onrov',3,'Suit','Can’t place a block inside the rover.'); return; }
-  setT(tx,ty,it.tile); G.inv[k]--; G.placed++; Music.blip();
+  setT(tx,ty,it.tile); netEdit(tx,ty,it.tile); G.inv[k]--; G.placed++; Music.blip(); buildControls();
   if(k==='beacon'){ G.beacons.push({x:tx,y:ty,km:kmAt(tx)}); say('Crew',`Outpost beacon planted at kilometer ${fmt(kmAt(tx),1)}. Future crews will find your shelter here.`); buildTrack(); }
 }
 function tileColor(t){ if(t===T.WR||t===T.WL) t=T.DUST; return ({1:'#c8693a',2:'#a6532c',3:'#5a4038',4:'#dba06a',5:'#d9eef5',6:'#7d564b',10:'#e7b47e',13:'#a24e2c',14:'#9aa3ad',15:'#e8a417',16:'#fff3b0',18:'#b9b3ad',19:'#9cc7dd'})[t]||'#a6532c'; }
@@ -1080,15 +1124,22 @@ function craftCard(){
       if(made){ Music.blip(); G.crafted+=made; } craftCard(); });
   });
 }
+function toggleInv(force){
+  if(!G.eva&&force!==false){ sayOnce('invin',3,'Rover','Open your inventory on an EVA (press E to go outside first).'); return; }
+  G.invOpen=force!=null?force:!G.invOpen; $('hotbar').dataset.key=''; renderHotbar(); buildControls();
+}
 function renderHotbar(){
   const hb=$('hotbar');
-  if(!G.eva){ if(!hb.hidden) hb.hidden=true; return; }
+  if(!G.eva||!G.invOpen){ if(!hb.hidden) hb.hidden=true; if(!G.eva) G.invOpen=false; return; }
   hb.hidden=false;
   const key=HOTBAR.concat(MATS).map(k=>G.inv[k]).join(',')+'|'+G.sel+'|'+G.mode;
   if(hb.dataset.key===key) return; hb.dataset.key=key;
-  hb.innerHTML=HOTBAR.map((k,i)=>`<button class="slot${i===G.sel?' on':''}${G.inv[k]?'':' empty'}" data-i="${i}" title="${ITEMS[k].name}"><img src="${itemImg(k)}" alt=""><b>${G.inv[k]}</b><kbd>${i<9?i+1:i===9?0:'-'}</kbd></button>`).join('')+
-    MATS.map(k=>`<span class="iron" title="${ITEMS[k].name}"><img src="${itemImg(k)}" alt="">${G.inv[k]}</span>`).join('');
-  hb.querySelectorAll('.slot').forEach(b=>b.onclick=()=>{ G.sel=+b.dataset.i; if(G.mode!=='place'){ G.mode='place'; buildControls(); } renderHotbar(); });
+  hb.innerHTML=`<div class="ihead"><b>Inventory</b><span>${invTotal()} / ${INV_MAX} items</span><button id="invX" aria-label="Close inventory">Close<kbd>I</kbd></button></div>
+    <div class="igrid">${HOTBAR.map((k,i)=>`<button class="slot${i===G.sel?' on':''}${G.inv[k]?'':' empty'}" data-i="${i}" title="${ITEMS[k].name}"><img src="${itemImg(k)}" alt=""><b>${G.inv[k]}</b><kbd>${i<9?i+1:i===9?0:'-'}</kbd><small>${ITEMS[k].name}</small></button>`).join('')}</div>
+    <div class="imats">${MATS.map(k=>`<span class="iron" title="${ITEMS[k].name}"><img src="${itemImg(k)}" alt="">${ITEMS[k].name} ${G.inv[k]}</span>`).join('')}</div>
+    <p class="ihint">Pick a block, then right-click (or tap in Build mode) to place it.</p>`;
+  hb.querySelector('#invX').onclick=()=>toggleInv(false);
+  hb.querySelectorAll('.slot').forEach(b=>b.onclick=()=>{ G.sel=+b.dataset.i; if(G.mode!=='place') G.mode='place'; hb.dataset.key=''; renderHotbar(); buildControls(); });
 }
 // ---- enclosure test: flood-fill the air around a point; if it can't escape, it's sealed ----
 function enclosure(sx0,sy0){
@@ -1138,29 +1189,34 @@ function drawFill(){
 }
 
 /* ============ MULTI-TRIP MISSION: bases, docking, legs, rover upgrades ============ */
-const FOOD_TOTAL=16, CRATE_KG=50, CREW_DAYS=25;
+const FOOD_TOTAL=20, CRATE_KG=50, CREW_DAYS=25;
 const RACKS=[
-  {name:'Standard cargo rack',cap:300,mass:0,cols:4},
-  {name:'Cargo rack Mk II',cap:450,mass:80,cols:5,need:{plate:3,titanium:2},desc:'A longer rack with titanium rails. Fits 9 crates.'},
-  {name:'Cargo rack Mk III',cap:600,mass:160,cols:6,need:{plate:4,titanium:4,meteorite:2},desc:'Iron-nickel from meteorites makes the frame strong enough for 12 crates.'},
-  {name:'Long-bed rover with a 4th axle',cap:800,mass:300,cols:8,need:{plate:6,titanium:3,meteorite:3,opal:3},desc:'Adds an extra pair of wheels and silica-aerogel insulation made from opal. Fits all 16 crates.'},
+  {name:'Standard cargo rack',cap:200,mass:0,cols:4},
+  {name:'Cargo rack Mk II',cap:325,mass:80,cols:5,need:{plate:3,titanium:2},desc:'A longer rack with titanium rails. Fits 6 crates.'},
+  {name:'Cargo rack Mk III',cap:450,mass:160,cols:6,need:{plate:4,titanium:4,meteorite:2},desc:'Iron-nickel from meteorites makes the frame strong enough for 9 crates.'},
+  {name:'Long-bed rover with a 4th axle',cap:600,mass:300,cols:8,need:{plate:6,titanium:3,meteorite:3,opal:3},desc:'Adds an extra pair of wheels and silica-aerogel insulation made from opal. Fits 12 crates.'},
 ];
 const EXT=[0,.55,1.1,2.2];
 const MOUNTS_L=[[-1.85,0,1.85],[-2.3,-.2,1.85],[-2.8,-.45,1.85],[-3.95,-2.1,-.3,1.85]];
 const PACK_ITEMS=[
-  {k:'o2',name:'Oxygen tank',mass:14,max:4,desc:'+0.25 kg of oxygen, about 3.6 hours for 2 people.'},
+  {k:'o2',name:'Oxygen tank',mass:14,max:4,desc:'+0.35 kg of oxygen, about 5 hours for 2 people.'},
   {k:'kits',name:'Repair kit',mass:8,max:4,desc:'Patches the hull or fixes wheels on an EVA.'},
   {k:'insul',name:'Cargo insulation blanket',mass:15,max:1,desc:'Slows freezing if the cargo heater fails.'},
 ];
 const capKg=()=>RACKS[rv.lvl].cap;
 const extrasKg=()=>PACK_ITEMS.reduce((s,it)=>s+it.mass*G.pack[it.k],0);
 const payload=n=>(n==null?rv.crates.length:n)*CRATE_KG+extrasKg();
-const roverMass=()=>cfgMass(G.cfg)+RACKS[rv.lvl].mass;
-const o2Cap=()=>.10+G.pack.o2*.25;
+const roverMass=()=>cfgMass(G.cfg)+RACKS[rv.lvl].mass+BATTS[rv.battLvl||0].mass;
+const o2Cap=()=>.25+G.pack.o2*.35;
+const BATTS=[
+  {name:'Standard battery',add:0,mass:0},
+  {name:'Nickel-iron battery pack',add:14,mass:40,need:{plate:2,titanium:1},desc:'Tough nickel-iron cells with a titanium case. Adds 14 kWh.'},
+  {name:'Solid-state battery',add:30,mass:70,need:{plate:3,meteorite:2,opal:2},desc:'Next-generation solid-state cells, a technology being tested on Earth today, pack much more energy into the same space. Adds 30 kWh over the standard battery.'},
+];
 const crewDays=a=>a.reduce((s,c)=>s+c/100*CREW_DAYS,0);
 function dockZone(){ return rv.x<72?'alpha':rv.x>1340?'bravo':null; }
 function applyRover(x,dir){
-  const P=cfgParts(G.cfg); rv.parts=P; rv.battMax=P.power.batt; rv.water=P.hull.rad<1; rv.insul=!!G.pack.insul; rv.hullMax=P.chassis.hull;
+  const P=cfgParts(G.cfg); rv.parts=P; rv.battMax=P.power.batt+BATTS[rv.battLvl||0].add; rv.water=P.hull.rad<1; rv.insul=!!G.pack.insul; rv.hullMax=P.chassis.hull;
   rv.massF=(roverMass()+payload())/2250;
   buildRoverBody(x,dir);
 }
@@ -1178,7 +1234,7 @@ function dockAt(which){
   rv.batt=rv.battMax; rv.hull=100; rv.wheels=100; rv.elec=100; rv.faults={nav:0,heater:false,motor:false,comms:false};
   rv.dust=.02; rv.strap=100; rv.cargoT=5; rv.safe=false; G.suit=100; G.kits=G.pack.kits; rv.o2=o2Cap();
   G.t+=40;
-  notes.push(`The base crew recharged the battery, refilled the oxygen${fixed?', repaired the rover':''} and restocked the repair kits. That took 40 minutes.`);
+  notes.push(`Oxygen tanks refilled to ${fmt(o2Cap(),2)} kg. The base crew also recharged the battery${fixed?', repaired the rover':''} and restocked the repair kits. That took 40 minutes.`);
   buildControls(); baseCard(which,notes);
 }
 function baseCard(which,notes=[]){
@@ -1196,6 +1252,7 @@ function baseCard(which,notes=[]){
     <div><b>${G.alpha.length} crates</b><span>left at Base Alpha${G.alpha.length?` (${alphaQ}% fresh)`:''}</span></div>
     <div><b>${fmt(delivered,0)} / ${FOOD_TOTAL*CREW_DAYS}</b><span>crew-days of food delivered to Bravo</span></div>
     <div><b>${RACKS[rv.lvl].cap} kg</b><span>cargo limit (${RACKS[rv.lvl].name})</span></div>
+    <div><b>${rv.battMax} kWh</b><span>battery (${BATTS[rv.battLvl].name})</span></div>
   </div>
   ${which==='alpha'&&G.alpha.length?`<h3>Load food</h3><div class="pack"><div class="nm">Food crates <span style="color:var(--muted);font-weight:400">(50 kg each, 25 crew-days)</span></div><div class="ds">Alpha’s freezers are failing, so food left here slowly spoils. Take as much as you can carry.</div>
     <div class="step"><button data-load="-1" aria-label="Load one less">−</button><span id="ldN">${G.loadN}</span><button data-load="1" aria-label="Load one more">+</button></div></div>`:''}
@@ -1206,6 +1263,11 @@ function baseCard(which,notes=[]){
   <h3>Workshop</h3>
   ${nr?`<div class="pack"><div class="nm">Build ${nr.name} (${nr.cap} kg)</div><div class="ds">${nr.desc} Needs ${needTxt}. Rare materials are found deep in caves: look for ladders going down.</div>
     <div class="step"><button id="bUp" style="width:auto;padding:0 12px" ${canUp?'':'disabled'}>Build</button></div></div>`:'<p>Your rover is as big as it gets.</p>'}
+  ${(()=>{ const nb=BATTS[rv.battLvl+1]; if(!nb) return '<p>Your battery is the best there is.</p>';
+    const nt=Object.entries(nb.need).map(([k,v])=>`<span style="color:${G.inv[k]>=v?'inherit':'var(--danger)'}">${v} ${ITEMS[k].name.toLowerCase()} (have ${G.inv[k]})</span>`).join(', ');
+    const ok=Object.entries(nb.need).every(([k,v])=>G.inv[k]>=v);
+    return `<div class="pack"><div class="nm">Install ${nb.name} (${cfgParts(G.cfg).power.batt+nb.add} kWh)</div><div class="ds">${nb.desc} Needs ${nt}.</div>
+    <div class="step"><button id="bBat" style="width:auto;padding:0 12px" ${ok?'':'disabled'}>Install</button></div></div>`; })()}
   <p id="massWarn" style="font-size:14px"></p>
   <div class="row"><button class="primary" id="bGoOut">Drive to ${other}</button><button id="bParts">Change rover parts</button>${which==='bravo'?`<button id="bEnd">${done?'Finish the mission':'End the mission here'}</button>`:''}</div>`,c=>{
     const upd=()=>{
@@ -1221,6 +1283,8 @@ function baseCard(which,notes=[]){
     c.querySelectorAll('[data-load]').forEach(b=>b.onclick=()=>{ G.loadN=clamp(G.loadN+ +b.dataset.load,0,maxLoad()); upd(); });
     c.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{ const it=PACK_ITEMS.find(i=>i.k===b.dataset.k), nv=G.pack[it.k]+ +b.dataset.d;
       if(nv<0||nv>it.max) return; G.pack[it.k]=nv; if(which==='alpha') G.loadN=Math.min(G.loadN,maxLoad()); G.kits=G.pack.kits; rv.o2=o2Cap(); upd(); });
+    const bb=c.querySelector('#bBat'); if(bb) bb.onclick=()=>{ const nb=BATTS[rv.battLvl+1]; Object.entries(nb.need).forEach(([k,v])=>G.inv[k]-=v); rv.battLvl++; G.upgrades++; Music.blip(); applyRover(rv.x,rv.dir); rv.batt=rv.battMax;
+      baseCard(which,[`The workshop crew installed the ${nb.name}. Your battery now holds ${rv.battMax} kWh, fully charged.`]); };
     const bu=c.querySelector('#bUp'); if(bu) bu.onclick=()=>{ Object.entries(nr.need).forEach(([k,v])=>G.inv[k]-=v); rv.lvl++; G.upgrades++; G.loadN=null; Music.blip(); applyRover(rv.x,rv.dir);
       baseCard(which,[`The workshop crew built the ${nr.name}. You can now carry ${nr.cap} kg.`]); };
     c.querySelector('#bParts').onclick=()=>garageCard(()=>{ applyRover(rv.x,rv.dir); baseCard(which); },()=>baseCard(which));
@@ -1269,6 +1333,213 @@ function stormCardN(){
     data:'Dust storms on Mars can last days or weeks. In 2018 the planet-wide storm blocked so much sunlight that the Opportunity rover never woke up again.',
     choices:[{label:'Start building'},{label:'Keep driving'}],after:()=>startStorm(3.4+G.R()*2.2,warn)});
 }
+
+/* ============ ONLINE MULTIPLAYER (artifact "room" capability) ============
+   Everyone playing at the same time shares one world (same map seed).
+   Each player publishes a small presence object: callsign, rover pose, EVA position,
+   progress and their last 40 block edits. Other players appear as ghost rovers and
+   astronauts, and their digging and building shows up in your world. Nothing is stored:
+   when someone leaves, their ghost goes too. Without the room (a saved copy, GitHub Pages,
+   signed-out viewers) the game runs as single player. */
+const NET={room:null,peers:[],seq:0,edits:[],lastSeq:new Map(),ghost:new Map(),t:0,name:'',col:0,names:new Map()};
+const NET_COLORS=['#2a8f87','#c4501f','#7b5ea7','#d99312','#3d7fb3','#b8336a','#3a8f48','#8d6e63'];
+const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,16);
+try{ NET.name=cleanName(localStorage.getItem('msr_name')); }catch(_){}
+if(!NET.name) NET.name='Astronaut '+(10+Math.floor(Math.random()*89));
+NET.col=Math.floor(Math.random()*NET_COLORS.length);
+function setCallsign(v){ NET.name=cleanName(v)||NET.name; try{ localStorage.setItem('msr_name',NET.name); }catch(_){} }
+function netCount(){ return NET.room?Math.max(1,NET.peers.filter(p=>p.kind==='viewer').length):1; }
+function netOthers(){ return NET.peers.filter(p=>!p.isMe&&p.kind==='viewer'&&p.presence&&p.presence.n); }
+async function netInit(){
+  try{
+    if(!window.claude||typeof window.claude.use!=='function') return;
+    const lobby=await window.claude.use('room'); if(!lobby) return;
+    const r=await lobby.join('mars-world-v1');
+    NET.room=r;
+    r.onPeers(ch=>{
+      NET.peers=ch.peers.slice();
+      for(const p of ch.joined.concat(ch.updated)) if(!p.isMe) netApplyEdits(p);
+      if(G&&G.state==='play'){
+        ch.joined.forEach(p=>{ if(!p.isMe&&p.kind==='viewer'&&p.presence&&p.presence.n) say('Comms',`${cleanName(p.presence.n)} is online in this world.`); });
+        ch.left.forEach(p=>{ const n=NET.names.get(p.peer); if(n) say('Comms',`${n} went offline.`); NET.ghost.delete(p.peer); NET.lastSeq.delete(p.peer); });
+      }
+      ch.peers.forEach(p=>{ if(p.presence&&p.presence.n) NET.names.set(p.peer,cleanName(p.presence.n)); });
+      netUI();
+    },()=>{ NET.room=null; netUI(); });
+    netUI();
+  }catch(_){ NET.room=null; }
+}
+const NET_TILES=new Set([T.AIR,T.REG,T.BAS,T.SAND,T.ICE,T.BRICK,T.PLATE,T.DOOR,T.LAMP,T.BEACON,T.PGLASS,T.LADDER]);
+function netEdit(x,y,t){ if(!NET.room) return; NET.edits.push([++NET.seq,x,y,t]); if(NET.edits.length>40) NET.edits.shift(); }
+function netApplyEdits(p){
+  const ed=p.presence&&p.presence.ed; if(!Array.isArray(ed)||!tiles) return;
+  let last=NET.lastSeq.get(p.peer)||0, changed=false;
+  for(const e of ed){
+    if(!Array.isArray(e)||e.length!==4) continue;
+    const [sq,x,y,t]=e.map(Number);
+    if(!(sq>last)||!Number.isInteger(x)||!Number.isInteger(y)||x<1||x>=W-1||y<1||y>=H-2||!NET_TILES.has(t)) continue;
+    last=Math.max(last,sq);
+    if(t!==T.AIR&&(overlapsRover(x,y)||(G.eva&&x+1>as.x&&x<as.x+as.w&&y+1>as.y&&y<as.y+as.h))) continue;
+    const cur=getT(x,y); if(cur===T.BED||cur===T.HULL||cur===T.GLASS) continue;
+    setT(x,y,t); changed=true;
+    if(t===T.AIR&&y>=floorA[x]&&bgA[y*W+x]!==2) bgA[y*W+x]=1;
+  }
+  NET.lastSeq.set(p.peer,last);
+  if(changed) G.netEdits=(G.netEdits||0)+1;
+}
+function netTick(dt){
+  if(!NET.room) return;
+  NET.t-=dt; if(NET.t>0) return; NET.t=.12;
+  const playing=G.state==='play';
+  const p={n:NET.name,c:NET.col,st:playing?'play':'menu'};
+  if(playing){
+    Object.assign(p,{rx:+rv.p.x.toFixed(2),ry:+rv.p.y.toFixed(2),ra:+rv.a.toFixed(3),rd:rv.dir,lv:rv.lvl,cr:rv.crates.length,
+      wh:rv.wh.map(w=>[+(w.q.x-rv.p.x).toFixed(2),+(w.q.y-rv.p.y).toFixed(2),+w.ang.toFixed(2)]),
+      ev:G.eva?1:0,ax:+as.x.toFixed(2),ay:+as.y.toFixed(2),af:as.face,km:+clamp(kmAt(rv.x),0,24).toFixed(1),
+      dl:Math.round(crewDays(G.bravo)),al:G.alpha.length,ed:NET.edits});
+  }
+  NET.room.presence(p).catch(()=>{});
+}
+function netUI(){
+  const b=$('bOnline');
+  if(b){ if(NET.room){ const n=netCount(); b.hidden=false; b.textContent=`Online: ${n}`; b.title=`${n} astronaut${n===1?'':'s'} in this world right now`; } else b.hidden=true; }
+  const t=document.getElementById('tOnline');
+  if(t) t.textContent=onlineText();
+  const lo=document.getElementById('ldOnline'); if(lo) lo.textContent=onlineText();
+  const mb=document.getElementById('bMulti'); if(mb&&!mb.dataset.busy) mb.disabled=!LOBBY.room;
+}
+function rosterCard(){
+  const rows=NET.peers.filter(p=>p.kind==='viewer').map(p=>{ const s=p.presence||{}, me=p.isMe&&p.sameTab;
+    const name=me?NET.name+' (you)':cleanName(s.n)||'Joining…';
+    const where=s.st==='play'?`${fmt(s.km||0,1)} km, ${s.ev?'on an EVA':'driving'}, ${s.cr||0} crates aboard, ${s.dl||0} crew-days delivered`:'in the menus';
+    return `<li><b style="color:${NET_COLORS[(s.c|0)%NET_COLORS.length]}">${esc(name)}</b>: ${where}</li>`; }).join('');
+  openCard(`<h2>Astronauts online</h2><p>${netCount()} playing in this world right now. Everyone shares the same map, sees each other’s rovers, and sees each other’s digging and building while they’re online. Each crew runs its own food mission.</p>
+  <ul>${rows}</ul><div class="row"><button class="primary" id="bOk">Back to the mission</button></div>`,c=>c.querySelector('#bOk').onclick=closeCard);
+}
+const esc=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
+function drawGhosts(now,dt){
+  if(!NET.room) return;
+  const seen=new Set();
+  for(const p of netOthers()){
+    const s=p.presence; if(s.st!=='play'||typeof s.rx!=='number') continue;
+    seen.add(p.peer);
+    let g=NET.ghost.get(p.peer);
+    if(!g){ g={x:s.rx,y:s.ry,a:s.ra||0,ax:s.ax||s.rx,ay:s.ay||s.ry}; NET.ghost.set(p.peer,g); }
+    const k=Math.min(1,dt*10); g.x+=(s.rx-g.x)*k; g.y+=(s.ry-g.y)*k; g.a+=((s.ra||0)-g.a)*k;
+    if(typeof s.ax==='number'){ g.ax+=(s.ax-g.ax)*k; g.ay+=(s.ay-g.ay)*k; }
+    const X=sx(g.x), Y=sy(g.y); if(X<-300||X>VW+300) continue;
+    const lv=clamp(s.lv|0,0,3), col=NET_COLORS[(s.c|0)%NET_COLORS.length];
+    ctx.save(); ctx.globalAlpha=.6;
+    ctx.save(); ctx.translate(X,Y); ctx.rotate(g.a); ctx.scale(TS*(s.rd<0?-1:1),TS);
+    drawRoverBody(ctx,null,{ext:EXT[lv],cols:RACKS[lv].cols,slots:RACKS[lv].cap/50|0,mounts:MOUNTS_L[lv],chassisKey:'std',hullKey:'basic',powerKey:'solar',crates:Array(clamp(s.cr|0,0,12)).fill(100),strap:100,stowed:false,dust:0,hullPct:100,lights:false});
+    ctx.restore();
+    (Array.isArray(s.wh)?s.wh:[]).slice(0,4).forEach(w=>{ if(!Array.isArray(w)) return; ctx.save(); ctx.translate(sx(g.x+(+w[0]||0)),sy(g.y+(+w[1]||0))); ctx.scale(TS,TS); drawWheel(ctx,0,0,+w[2]||0,'alu',false,col); ctx.restore(); });
+    if(s.ev){ ctx.save(); ctx.translate(sx(g.ax+.35),sy(g.ay)); if(s.af<0) ctx.scale(-1,1); ctx.scale(TS,TS);
+      Rc(ctx,-.26,.42,.56,.72,'#f1ece4'); Rc(ctx,-.26,.78,.56,.07,col); Rc(ctx,-.28,1.08,.22,.6,'#e6e1d8'); Rc(ctx,.06,1.08,.22,.6,'#d9d3c9');
+      ctx.fillStyle='#f4f0e9'; ctx.beginPath(); ctx.arc(.02,.26,.27,0,7); ctx.fill(); ctx.fillStyle=col; ctx.beginPath(); ctx.ellipse(.12,.27,.15,.12,0,0,7); ctx.fill(); ctx.restore(); }
+    ctx.restore();
+    // name tag
+    const name=cleanName(s.n), tx=s.ev?sx(g.ax+.35):X, ty=s.ev?sy(g.ay)-6:Y-TS*3;
+    ctx.font=`700 ${Math.max(12,Math.round(TS*.5))}px "Pixelify Sans", monospace`; ctx.textAlign='center'; ctx.textBaseline='bottom';
+    const w=ctx.measureText(name).width+12; ctx.fillStyle='rgba(20,10,6,.65)'; ctx.fillRect(tx-w/2,ty-TS*.7,w,TS*.66);
+    ctx.fillStyle=col; ctx.fillRect(tx-w/2,ty-TS*.7,4,TS*.66); ctx.fillStyle='#fff'; ctx.fillText(name,tx+2,ty-TS*.08);
+  }
+  for(const k of NET.ghost.keys()) if(!seen.has(k)) NET.ghost.delete(k);
+}
+
+/* ============ LOBBY, SOLO / MULTIPLAYER CHOICE, WORLD LEADERBOARD ============ */
+const LOBBY={room:null,count:0,multi:0,ready:false};
+function lobbyMode(m){ try{ if(LOBBY.room) LOBBY.room.presence({pl:m}).catch(()=>{}); }catch(_){} }
+function onlineText(){
+  if(!LOBBY.room) return 'Online player counts, multiplayer and the world leaderboard work when the game is opened on claude.ai while signed in. Solo works everywhere.';
+  if(!LOBBY.ready) return 'Looking for other astronauts…';
+  const n=Math.max(1,LOBBY.count), m=LOBBY.multi;
+  return `${n} ${n===1?'person has':'people have'} the game open right now. `+(m?`${m} ${m===1?'is':'are'} playing multiplayer.`:'No one is in multiplayer yet. Be the first!');
+}
+const LB={db:null,uid:null,rows:[],ready:false,mine:null,err:''};
+async function lobbyInit(){
+  try{
+    if(!window.claude||typeof window.claude.use!=='function') return;
+    const lobby=await window.claude.use('room'); if(!lobby) return;
+    LOBBY.room=lobby;
+    lobby.onPeers(ch=>{ const v=ch.peers.filter(p=>p.kind==='viewer'); LOBBY.count=v.length; LOBBY.multi=v.filter(p=>p.presence&&p.presence.pl==='multi').length; LOBBY.ready=true; netUI(); },()=>{ LOBBY.room=null; netUI(); });
+    lobbyMode('menu');
+  }catch(_){ LOBBY.room=null; }
+}
+async function lbInit(){
+  try{
+    if(!window.claude||typeof window.claude.use!=='function') return;
+    const [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+    if(!db) return;
+    LB.db=db; LB.uid=user?await user.id():null;
+    db.collection('leaderboard').orderBy('minutes','asc').limit(50).onSnapshot(snap=>{
+      LB.rows=snap.docs.filter(d=>d.exists).map(d=>({id:d.id,...d.data()}))
+        .filter(r=>typeof r.minutes==='number'&&r.minutes>0&&r.minutes<100000).sort((a,b)=>a.minutes-b.minutes);
+      LB.ready=true; const m=LB.rows.find(r=>r.id===LB.uid); if(m) LB.mine=m;
+    },()=>{ LB.ready=false; LB.err='The leaderboard is unavailable right now.'; });
+  }catch(_){ LB.db=null; }
+}
+const fmtTime=m=>`${Math.floor(m/60)}h ${String(Math.floor(m%60)).padStart(2,'0')}m`;
+function localBest(){ try{ return JSON.parse(localStorage.getItem('msr_best')||'null'); }catch(_){ return null; } }
+async function submitRun(run){
+  // run = {minutes, food, trips, lvl, mode}
+  let note='';
+  try{ const lb=localBest(); if(!lb||run.minutes<lb.minutes) localStorage.setItem('msr_best',JSON.stringify(run)); }catch(_){}
+  if(!LB.db||!LB.uid) return {saved:false,note:'Open the game on claude.ai while signed in to post your time to the world leaderboard.'};
+  try{
+    const ref=LB.db.doc('leaderboard/'+LB.uid);
+    const cur=await ref.get(); const old=cur.exists?cur.data():null;
+    if(old&&typeof old.minutes==='number'&&old.minutes<=run.minutes) return {saved:false,note:`Your best is still ${fmtTime(old.minutes)}.`};
+    await ref.set({name:NET.name,minutes:Math.round(run.minutes),food:Math.round(run.food),trips:run.trips,lvl:run.lvl,mode:run.mode,at:new Date().toISOString().slice(0,10)});
+    return {saved:true,note:old?`New personal best! (was ${fmtTime(old.minutes)})`:'Your first time on the leaderboard!'};
+  }catch(e){
+    return {saved:false,note:e&&e.code==='not_permitted'||e&&e.code==='invalid_argument'?'Your access to this game is view-only, so your time can’t be posted. Ask the owner to make you a Contributor.':'Your time couldn’t be posted to the leaderboard just now.'};
+  }
+}
+function rankOf(minutes){ return LB.rows.filter(r=>r.minutes<minutes).length+1; }
+function leaderboardCard(back){
+  const rows=LB.rows.slice(0,25).map((r,i)=>`<tr class="${r.id===LB.uid?'me':''}"><td>${i+1}</td><td>${esc(cleanName(r.name)||'Astronaut')}${r.id===LB.uid?' (you)':''}</td><td>${fmtTime(r.minutes)}</td><td>${r.food|0}</td><td>${r.trips|0}</td><td>${r.mode==='multi'?'Online':'Solo'}</td></tr>`).join('');
+  const lb=localBest();
+  openCard(`<h2>Fastest crews on Mars</h2>
+  <p>Ranked by mission time to move every food crate from Base Alpha to Base Bravo. Everyone plays the same map, so times are fair.</p>
+  ${LB.db?(rows?`<div style="overflow-x:auto"><table class="lb"><thead><tr><th>#</th><th>Callsign</th><th>Time</th><th>Crew-days</th><th>Trips</th><th>Mode</th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p><b>No finished missions yet.</b> Be the first crew on the board!</p>`)
+    :`<p>${LB.err||'The world leaderboard works when the game is opened on claude.ai while signed in.'}</p>`}
+  ${lb?`<p class="data"><b>Your best on this device:</b> ${fmtTime(lb.minutes)}, ${lb.food|0} crew-days delivered in ${lb.trips} trips.</p>`:''}
+  <div class="row"><button class="primary" id="bOk">Back</button></div>`,c=>c.querySelector('#bOk').onclick=()=>(back||titleCard)());
+}
+function loadingCard(){
+  const steps=['Building the terrain','Digging caves','Hiding rare minerals','Looking for other astronauts','Loading the leaderboard'];
+  openCard(`<h1>Supply Run to Bravo</h1>
+  <p style="font-family:var(--pixel);font-size:22px;margin:0 0 14px;color:var(--teal)">Henhen Mars Mission Trainer</p>
+  <div class="cap" style="height:22px"><i id="ldBar" style="width:0;transition:width .3s"></i></div>
+  <p id="ldTxt" style="font-family:var(--pixel);font-size:16px">${steps[0]}…</p>
+  <p id="ldOnline" style="font-size:16px;font-weight:700;color:var(--teal)">Looking for other astronauts…</p>`,c=>{
+    let i=0; const bar=c.querySelector('#ldBar'), txt=c.querySelector('#ldTxt');
+    const services=Promise.race([Promise.all([lobbyInit(),lbInit()]),new Promise(r=>setTimeout(r,4000))]);
+    const tick=setInterval(()=>{ i++; if(bar) bar.style.width=Math.min(95,i*19)+'%'; if(txt&&steps[i]) txt.textContent=steps[i]+'…'; },380);
+    Promise.all([services,new Promise(r=>setTimeout(r,2400))]).then(()=>{ clearInterval(tick); if(bar) bar.style.width='100%'; netUI(); setTimeout(titleCard,900); });
+  });
+}
+async function netJoin(){
+  if(NET.room) return true;
+  if(!LOBBY.room) return false;
+  try{
+    const r=await LOBBY.room.join('mars-world-v1');
+    NET.room=r;
+    r.onPeers(ch=>{
+      NET.peers=ch.peers.slice();
+      for(const p of ch.joined.concat(ch.updated)) if(!p.isMe) netApplyEdits(p);
+      if(G&&G.state==='play'){
+        ch.joined.forEach(p=>{ if(!p.isMe&&p.kind==='viewer'&&p.presence&&p.presence.n) say('Comms',`${cleanName(p.presence.n)} is online in this world.`); });
+        ch.left.forEach(p=>{ const n=NET.names.get(p.peer); if(n) say('Comms',`${n} went offline.`); NET.ghost.delete(p.peer); NET.lastSeq.delete(p.peer); });
+      }
+      ch.peers.forEach(p=>{ if(p.presence&&p.presence.n) NET.names.set(p.peer,cleanName(p.presence.n)); });
+      netUI();
+    },()=>{ NET.room=null; netUI(); });
+    netUI(); return true;
+  }catch(_){ NET.room=null; return false; }
+}
+function netLeave(){ try{ if(NET.room&&NET.room.leave) Promise.resolve(NET.room.leave()).catch(()=>{}); }catch(_){} NET.room=null; NET.peers=[]; NET.ghost.clear(); NET.lastSeq.clear(); NET.edits=[]; netUI(); }
 
 /* ============ ROVER PHYSICS: rigid body + spring suspension + rolling circle wheels ============ */
 const WRAD=.75, MW=.22, IW=.5*MW*WRAD*WRAD;
@@ -1560,6 +1831,7 @@ function addDrift(){
 }
 
 /* ============ END ============ */
+function endCardAgain(){ overlay.hidden=false; card.innerHTML=G.endHtml||''; const a=card.querySelector('#bAgain'); if(a) a.onclick=restart; const l=card.querySelector('#bLB2'); if(l) l.onclick=()=>leaderboardCard(endCardAgain); }
 function endMission(won,why){
   if(G.state!=='play') return;
   G.state='over'; G.paused=true;
@@ -1576,6 +1848,7 @@ function endMission(won,why){
       <div><b>${G.dug} / ${G.placed}</b><span>blocks dug / placed</span></div>
       <div><b>${Math.floor(G.t/60)}h ${String(Math.floor(G.t%60)).padStart(2,'0')}m</b><span>mission time</span></div>
     </div>`;
+  const done=G.alpha.length===0&&rv.crates.length===0;
   if(won){
     const stars=pct>=85&&rv.dose<15?3:pct>=60?2:1;
     const badges=[];
@@ -1594,7 +1867,11 @@ function endMission(won,why){
     <h3>Where food was lost</h3><p>${losses}</p>
     ${badges.length?`<h3>Badges earned</h3><ul>${badges.map(b=>`<li>${b}</li>`).join('')}</ul>`:''}
     <p class="data"><b>Real data.</b> NASA plans food for long missions years in advance, and some foods lose vitamins over time in space. Every crate you protect is real time a crew can stay and explore.</p>
-    <div class="row"><button class="primary" id="bAgain">Fly another mission</button></div>`,c=>c.querySelector('#bAgain').onclick=restart);
+    ${done?`<h3>World leaderboard</h3><p id="lbNote">Your time: <b>${fmtTime(G.t)}</b>. Posting it…</p>`:`<p class="data"><b>Leaderboard.</b> Only missions that deliver every crate get a time on the leaderboard.</p>`}
+    <div class="row"><button class="primary" id="bAgain">Fly another mission</button><button id="bLB2">Leaderboard</button></div>`,c=>{ c.querySelector('#bAgain').onclick=restart; c.querySelector('#bLB2').onclick=()=>leaderboardCard(()=>endCardAgain());
+      if(done) submitRun({minutes:G.t,food:food,trips:G.trips,lvl:rv.lvl,mode:G.play}).then(r=>{ const el=document.getElementById('lbNote'); if(!el) return;
+        const rank=LB.db?` That puts you <b>#${rankOf(G.t)}</b> in the world.`:''; el.innerHTML=`Your time: <b>${fmtTime(G.t)}</b>. ${r.note}${r.saved?rank:''}`; G.endHtml=card.innerHTML; }); });
+    G.endHtml=card.innerHTML;
   } else {
     openCard(`<h2>Mission aborted</h2>
     <p>The rover ran out of oxygen. A rescue team reached you just in time, but the crates on board had to be left behind.</p>
@@ -1680,6 +1957,7 @@ function render(now){
   drawFill();
   drawDecor();
   drawDevil(now);
+  drawGhosts(now,NET.dt||.016);
   drawRover(now);
   if(G.eva) drawAstro(now);
   // particles
@@ -1877,7 +2155,7 @@ function updHUD(){
   $('speed').textContent=(G.eva?'On EVA':fmt(Math.abs(rv.vx)*BKM*60,1)+' km/h')+(G.warp>1?', waiting ×4':'');
   $('roverMark').style.left=(k/24*100)+'%';
   const leak=rv.hull<60?(60-rv.hull)/60*.25:0;
-  setBar('gO2',rv.o2/.6,`${fmt(rv.o2,3)} kg, ${fmt(rv.o2/(O2_PER_HOUR*(G.eva?1.5:1)+leak),1)} h`);
+  setBar('gO2',rv.o2/Math.max(.1,o2Cap()),`${fmt(rv.o2,3)} kg, ${fmt(rv.o2/(O2_PER_HOUR*(G.eva?1.5:1)+leak),1)} h`);
   const net=sim.solar-sim.draw;
   setBar('gBatt',rv.batt/rv.battMax,`${fmt(rv.batt,1)} kWh (${net>=0?'+':'−'}${fmt(Math.abs(net),1)} kW)`);
   setBar('gHull',rv.hull/100,`${fmt(rv.hull,0)}%${leak>0?' leaking':''}`);
@@ -1918,7 +2196,7 @@ function updHUD(){
 /* ============ LOOP ============ */
 let lastTime=performance.now(), hudT=0;
 function frame(now){
-  const rdt=Math.min(.05,(now-lastTime)/1000); lastTime=now;
+  const rdt=clamp((now-lastTime)/1000,0,.05); lastTime=now;
   if(G.state==='play'&&!G.paused){
     if(G.warp>1&&(G.eva||Math.abs(rv.vx)>.3)){ G.warp=1; buildControls(); }
     const sdt=rdt*G.warp;
@@ -1944,13 +2222,14 @@ function frame(now){
     G.streaks.forEach(st=>{ st.x+=st.v*rdt; st.y+=st.v*.06*rdt; if(st.x-st.l>VW){ st.x=-10; st.y=Math.random()*VH; } });
     G.shake=Math.max(0,G.shake-rdt*1.5); G.glitch=Math.max(0,G.glitch-rdt);
   }
+  NET.dt=rdt; try{ netTick(rdt); }catch(_){}
   render(now);
   hudT-=rdt; if(hudT<=0&&G.state==='play'){ hudT=.1; updHUD(); }
   requestAnimationFrame(frame);
 }
 
 /* ============ BOOT ============ */
-makeSprites(); resize(); newGame(); titleCard();
+makeSprites(); resize(); newGame(); loadingCard();
 requestAnimationFrame(t=>{ lastTime=t; frame(t); });
 })();
 </script>

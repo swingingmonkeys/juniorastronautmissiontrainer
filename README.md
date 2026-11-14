@@ -1,12 +1,20 @@
-# Supply Run to Bravo – Junior Astronaut Mission Trainer
+# Supply Run to Bravo – Henhen Mars Mission Trainer
 
 A Minecraft-style Mars survival and driving game by **The Royal Beauties** for the NASA Space Apps Challenge 2026 challenge *Build a Junior Astronaut Mission Trainer*.
 
-Base Alpha is shutting down. Your crew has to move all 16 crates of food 24 km across Mars to Base Bravo. The rover only carries 300 kg at a time, so you make several trips, unless you explore deep caves for rare minerals and build a bigger rover.
+Base Alpha is shutting down. Your crew has to move all 20 crates of food 24 km across Mars to Base Bravo. The rover only carries 200 kg at a time and your pack holds just 40 items, so you make several trips (oxygen is refilled at each base), unless you explore deep caves for rare minerals and build a bigger rover.
 
 ## Play
 
 Open `index.html` in any modern browser. It is a single file with no build step, server or installs. To host it free, turn on GitHub Pages for this repository (Settings → Pages → deploy from the `main` branch).
+
+## Solo, multiplayer and the leaderboard
+
+A loading screen leads to a start screen where you pick **Solo** or **Multiplayer**. Every game uses the same map, so times are comparable: finish a mission that delivers every food crate and your mission time is posted to the **world leaderboard** of fastest crews (your best time is kept). The leaderboard and multiplayer need the claude.ai version while signed in; elsewhere the game remembers your best time on that device.
+
+## Online multiplayer
+
+When the game is opened on claude.ai by signed-in players, everyone playing at the same moment shares one Mars: you see each other's rovers and astronauts with callsigns, digging and building shows up for everyone online, and an **Online** counter shows how many astronauts are playing. Each crew runs its own food mission. Opened anywhere else (for example GitHub Pages or a downloaded copy) the game runs as single player, because online play uses claude.ai's live room service.
 
 ## What you do
 
@@ -14,7 +22,7 @@ Open `index.html` in any modern browser. It is a single file with no build step,
 - **Drive** with a physics engine: a rigid body on spring-and-damper suspension with rolling wheels. Hard landings crack food crates.
 - **Survive Mars hazards:** dust storms, solar flares that scramble electronics, radiation, deep cold, toxic perchlorate dust and sharp rocks.
 - **Dig, craft and build:** mine regolith, basalt, sand, ice and iron ore; craft bricks, glass, metal plates, airlock doors, ladders, lamps and outpost beacons; build sealed shelters before storms hit.
-- **Explore caves** for rare titanium ore, opal and meteorite iron to build bigger cargo racks.
+- **Explore caves** for rare titanium ore, opal and meteorite iron to build bigger cargo racks and better batteries.
 - **Manage oxygen, power and food** using real consumption rates.
 
 ## Controls
@@ -29,6 +37,7 @@ Open `index.html` in any modern browser. It is a single file with no build step,
 | Click / tap | Dig a block |
 | Right click, or Q for build mode | Place a block |
 | 1–0, mouse wheel | Choose a block |
+| I | Open or close the inventory |
 | C | Fabricator (crafting) |
 | F | Storm shelter and electronics safe mode |
 | H / O / T | Cargo heater, stow panels, wait faster |
