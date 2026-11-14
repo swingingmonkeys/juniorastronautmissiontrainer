@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Supply Run to Bravo – Henhen Mars Mission Trainer</title>
+<title>Supply Run to Bravo – HIF Mars Mission Trainer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
@@ -84,7 +84,7 @@ kbd{font-family:var(--pixel);font-size:11px;opacity:.7;margin-left:3px}
 #topbtns{position:absolute;left:calc(460px + env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;gap:6px}
 #overlay{position:fixed;inset:0;background:rgba(20,10,6,.62);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
 #overlay[hidden]{display:none}
-#card{width:min(640px,100%);max-height:calc(100% - 20px);overflow:auto;padding:20px 22px;background:var(--panel);border:3px solid var(--line);border-radius:10px;color:var(--text);backdrop-filter:blur(4px)}
+#card{width:min(640px,100%);max-height:calc(100% - 20px);overflow:auto;padding:20px 22px;background:var(--panel);border:3px solid var(--line);border-radius:10px;color:var(--text)}
 #card h1{font-family:var(--pixel);font-weight:700;font-size:clamp(30px,6vw,46px);line-height:1;margin:0 0 6px;color:var(--rust)}
 #card h2{font-family:var(--pixel);font-weight:700;font-size:26px;margin:0 0 6px}
 #card h3{font-family:var(--pixel);font-weight:500;font-size:17px;margin:16px 0 6px}
@@ -135,6 +135,9 @@ body.hide-gauges #side{display:none}
 #card ul.lobby .dot{width:12px;height:12px;border-radius:50%;flex:none}
 #card ul.lobby small{color:var(--muted)}
 #lbTabs button.on{background:var(--btn-on);color:var(--btn-on-text);border-color:var(--btn-on)}
+#jctl{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);display:flex;justify-content:center;gap:6px;flex-wrap:wrap;padding:0 8px;z-index:4}
+#jctl[hidden]{display:none}
+#jctl button{min-height:48px;min-width:56px;font-weight:700}
 #card.wide{width:min(900px,100%)}
 #card .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
 #card .opt{text-align:left;padding:9px 11px;font-size:15px}
@@ -641,7 +644,7 @@ function sayOnce(key,cool,who,text,kind){ const now=G.t; if(G.toastT[key]!=null&
 /* ============ CARDS ============ */
 const card=$('card'), overlay=$('overlay');
 function openCard(html,onBind){ card.innerHTML=html; overlay.hidden=false; G.paused=true; if(onBind) onBind(card); const f=card.querySelector('button'); if(f) f.focus({preventScroll:true}); }
-function closeCard(){ overlay.hidden=true; card.innerHTML=''; if(G.state==='play') G.paused=false; lastTime=performance.now(); }
+function closeCard(){ overlay.hidden=true; card.innerHTML=''; if(G.state==='play'||G.state==='journey') G.paused=false; lastTime=performance.now(); }
 function eventCard({title,who,body,data,choices,after}){
   const ch=(choices||[{label:'Continue'}]).map((c,i)=>`<button data-i="${i}">${c.label}${c.sub?`<small>${c.sub}</small>`:''}</button>`).join('');
   openCard(`<h2>${title}</h2>${who?`<p class="who">${who}</p>`:''}<p>${body}</p>${data?`<p class="data"><b>Real data.</b> ${data}</p>`:''}<div class="choices">${ch}</div>`,c=>{
@@ -651,7 +654,7 @@ function eventCard({title,who,body,data,choices,after}){
 
 function titleCard(){
   openCard(`<h1>Supply Run to Bravo</h1>
-  <p style="font-family:var(--pixel);font-size:22px;margin:0 0 8px;color:var(--teal)">Henhen Mars Mission Trainer</p>
+  <p style="font-family:var(--pixel);font-size:22px;margin:0 0 8px;color:var(--teal)">HIF Mars Mission Trainer</p>
   <p class="who">A Junior Astronaut Mission Trainer by The Royal Beauties, NASA Space Apps Challenge 2026</p>
   <p>Base Alpha is shutting down. You and your crewmate have one job: move <b>all 20 crates of food</b> 24 km across Mars to Base Bravo. Your rover can only carry 200 kg at a time, so you’ll make several trips, unless you explore deep caves for rare minerals and build a bigger rover.</p>
   <p>The numbers in this game come from real Mars missions: how much oxygen people breathe, how much sunlight reaches Mars, how strong the radiation is, and what dust storms and solar flares did to real rovers.</p>
@@ -708,6 +711,7 @@ function packCard(){
 }
 function startMission(){
   applyRover(X0,1); rv.batt=rv.battMax; rv.o2=o2Cap(); G.kits=G.pack.kits;
+  if(G.journey&&G.journey.reward&&!G.journey.applied){ const r=G.journey.reward; G.inv.plate+=r.plate; G.inv.brick+=r.brick; G.kits+=r.kits; G.journey.applied=true; }
   G.state='play'; $('hud').hidden=false; buildControls(); buildTrack();
   say('Base Alpha',`All ${FOOD_TOTAL} crates of food have to get to Bravo, but the rover can only carry ${capKg()} kg at a time. Plan on several trips, or dig up rare minerals in the caves to build a bigger rover.`);
   baseCard('alpha',[`Welcome to Base Alpha. Our power plant is failing and the freezers are next. There are ${FOOD_TOTAL} crates of food here (${FOOD_TOTAL*CREW_DAYS} crew-days), and every one of them needs to reach Base Bravo, 24 km east.`]);
@@ -882,6 +886,11 @@ function outsideTemp(){ const h=hourOf(); let t=-80+62*sunF(h); const s=clamp((G
 const K={fwd:false,back:false,brake:false,jump:false};
 const KEYMAP={KeyD:'fwd',ArrowRight:'fwd',KeyA:'back',ArrowLeft:'back',KeyS:'brake',ArrowDown:'brake',KeyW:'jump',ArrowUp:'jump',Space:'jump'};
 addEventListener('keydown',e=>{
+  if(G&&G.state==='journey'&&overlay.hidden){
+    if(KEYMAP[e.code]){ K[KEYMAP[e.code]]=true; e.preventDefault(); }
+    if(!e.repeat){ if(e.code==='Enter'||e.code==='KeyX') jAction(); else if(e.code==='KeyF') jShelter(); else if(e.code==='KeyM'){ Music.toggle(); syncMusicBtn(); } }
+    return;
+  }
   if(!overlay.hidden){ if(e.code==='Escape'&&G.state==='play') closeCard(); return; }
   if(G.state!=='play') return;
   if(KEYMAP[e.code]){ K[KEYMAP[e.code]]=true; e.preventDefault(); }
@@ -1586,7 +1595,7 @@ function localBest(){ try{ return JSON.parse(localStorage.getItem('msr_best')||'
 function loadingCard(){
   const steps=['Building the terrain','Digging caves','Hiding rare minerals','Looking for other astronauts','Loading the leaderboard'];
   openCard(`<h1>Supply Run to Bravo</h1>
-  <p style="font-family:var(--pixel);font-size:22px;margin:0 0 14px;color:var(--teal)">Henhen Mars Mission Trainer</p>
+  <p style="font-family:var(--pixel);font-size:22px;margin:0 0 14px;color:var(--teal)">HIF Mars Mission Trainer</p>
   <div class="cap" style="height:22px"><i id="ldBar" style="width:0;transition:width .3s"></i></div>
   <p id="ldTxt" style="font-family:var(--pixel);font-size:16px">${steps[0]}…</p>
   <p id="ldOnline" style="font-size:16px;font-weight:700;color:var(--teal)">Looking for other astronauts…</p>`,c=>{
@@ -1612,7 +1621,7 @@ function diffCard(mode){
   <p>${mode==='multi'?'Multiplayer is Medium or Hard only, and storms hit harder than in solo play.':'Pick how tough Mars should be.'} Each difficulty has its own leaderboard.</p>
   <div class="modes">${opts.map((k,i)=>`<button class="mode${i===(mode==='multi'?0:1)?' primary':''}" data-d="${k}"><b>${DIFFS[k].name}</b><small>${DIFFS[k].desc}${mode==='multi'?' Multiplayer storms are about 20% stronger.':''}</small></button>`).join('')}</div>
   <div class="row"><button id="bBack">Back</button></div>`,c=>{
-    c.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ G.diff=b.dataset.d; if(mode==='multi') joinLobby(); else { netLeave(); G.play='solo'; lobbyMode('solo'); garageCard(); } });
+    c.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ G.diff=b.dataset.d; if(mode==='multi') joinLobby(); else { netLeave(); G.play='solo'; lobbyMode('solo'); journeyIntro(()=>garageCard()); } });
     c.querySelector('#bBack').onclick=titleCard;
   });
 }
@@ -1634,6 +1643,7 @@ const BADGES=[
   {id:'ex_cave',icon:'⛏️',name:'Cave Explorer',desc:'Find 5 or more rare minerals.'},
   {id:'ex_rover',icon:'🚙',name:'Rover Engineer',desc:'Build the long-bed rover.'},
   {id:'ex_flare',icon:'☀️',name:'Space Weather Ready',desc:'Shelter from a solar flare.'},
+  {id:'ex_land',icon:'🪂',name:'Seven Minutes of Terror',desc:'Make a perfect landing on Mars at the end of the journey.'},
 ];
 function myBadges(){ try{ return JSON.parse(localStorage.getItem('msr_badges')||'{}')||{}; }catch(_){ return {}; } }
 function saveBadges(b){ try{ localStorage.setItem('msr_badges',JSON.stringify(b)); }catch(_){} }
@@ -1794,7 +1804,7 @@ function lobbyCard(){
   <ul id="lobbyList" class="lobby"></ul>
   <div class="row"><button class="primary" id="bStartM">Start mission</button><button id="bLeave">Leave lobby</button></div>`,c=>{
     renderLobbyList();
-    c.querySelector('#bStartM').onclick=()=>garageCard(null,lobbyCard);
+    c.querySelector('#bStartM').onclick=()=>journeyIntro(()=>garageCard(null,lobbyCard));
     c.querySelector('#bLeave').onclick=()=>{ netLeave(); G.play='solo'; lobbyMode('menu'); titleCard(); };
   });
 }
@@ -1805,6 +1815,271 @@ function renderLobbyList(){
   const all=me.concat(ps);
   ul.innerHTML=`<li class="count">${all.length} of ${LOBBY_MAX} astronauts</li>`+all.map(p=>{ const s=p.presence||{}, you=p.isMe&&p.sameTab;
     return `<li><span class="dot" style="background:${NET_COLORS[(s.c|0)%NET_COLORS.length]}"></span><b>${esc(you?NET.name:(cleanName(s.n)||'Joining…'))}</b>${you?' (you)':''} <small>${s.st==='play'?`on the mission, ${fmt(s.km||0,1)} km`:'in the lobby'}</small></li>`; }).join('');
+}
+
+/* ============ PROLOGUE: THE JOURNEY FROM EARTH TO MARS ============
+   Three short phases before the surface mission:
+   1. Launch: drop each rocket stage at the right moment to save fuel.
+   2. Cruise: about 200 days squeezed into a minute. Stay near the planned path,
+      dodge micrometeoroids, and shelter the crew during a solar storm.
+   3. Landing ("seven minutes of terror"): open the parachute at the right speed,
+      then fly the rockets down to a soft touchdown next to Base Alpha. */
+let J=null;
+const JDAYS=203, JCRUISE=55;   // real Perseverance trip length (days); cruise length in real seconds
+function journeyIntro(next){
+  openCard(`<h2>First, get to Mars</h2>
+  <p>Before the supply run, your crew has to fly from Earth to Mars: launch the rocket, survive about 200 days in deep space, and land.</p>
+  <p class="data"><b>Real data.</b> Earth and Mars line up for an efficient trip about every 26 months. NASA’s Perseverance rover launched on July 30, 2020 and landed on February 18, 2021, a 203-day journey.</p>
+  <div class="ctrl"><kbd>Enter / X / tap Action</kbd><span>Drop a rocket stage, open the parachute</span><kbd>W / S or ▲ ▼</kbd><span>Steer the rocket; W fires the landing engine</span><kbd>A / D or ◀ ▶</kbd><span>Steer sideways while landing</span><kbd>F</kbd><span>Move the crew into the storm shelter</span></div>
+  <div class="row"><button class="primary" id="bFly">Launch!</button><button id="bSkip">Skip to Mars</button></div>`,c=>{
+    c.querySelector('#bFly').onclick=()=>journeyStart(next);
+    c.querySelector('#bSkip').onclick=()=>{ G.journey={skipped:true}; next(); };
+  });
+}
+function journeyStart(next){
+  J={phase:'launch',t:0,next,alt:0,stage:1,sfuel:100,fuel:100,wasted:0,sep:[],flame:1,
+     y:0,vy:0,hull:100,dose:0,err:0,day:0,deb:[],debT:0,flare:null,flareDone:false,shelter:false,hits:0,
+     edl:null,shake:0,msg:'',msgT:0};
+  G.state='journey'; G.paused=false; overlay.hidden=true; card.innerHTML='';
+  $('hud').hidden=true; buildJControls(); lastTime=performance.now();
+  jMsg('Stage 1 is burning. Press Action (Enter or X) when its fuel bar reaches the green zone.');
+}
+function jMsg(m){ J.msg=m; J.msgT=8; }
+function buildJControls(){
+  let jc=$('jctl'); if(!jc){ jc=document.createElement('nav'); jc.id='jctl'; document.body.appendChild(jc); }
+  jc.hidden=false;
+  const hold=(l,k)=>`<button class="big" data-jh="${k}">${l}</button>`;
+  jc.innerHTML=hold('◀','back')+hold('▲','jump')+hold('▼','brake')+hold('▶','fwd')+`<button class="big" data-ja="act">Action</button><button data-ja="shelter">Shelter (F)</button>`;
+  jc.querySelectorAll('[data-jh]').forEach(b=>{ const k=b.dataset.jh;
+    b.addEventListener('pointerdown',e=>{ e.preventDefault(); K[k]=true; try{b.setPointerCapture(e.pointerId);}catch(_){}});
+    const up=()=>{ K[k]=false; }; b.addEventListener('pointerup',up); b.addEventListener('pointercancel',up); b.addEventListener('lostpointercapture',up); });
+  jc.querySelector('[data-ja="act"]').onclick=jAction;
+  jc.querySelector('[data-ja="shelter"]').onclick=jShelter;
+}
+function hideJControls(){ const jc=$('jctl'); if(jc) jc.hidden=true; for(const k in K) K[k]=false; }
+function jShelter(){ if(!J||J.phase!=='cruise') return; J.shelter=!J.shelter; jMsg(J.shelter?'Crew is in the storm shelter, behind the water and food stores. Thrusters are off.':'Crew is back at the controls.'); }
+function jAction(){
+  if(!J) return;
+  if(J.phase==='launch'){
+    if(J.sfuel>12){ J.wasted+=J.sfuel*.35; jMsg(`Too early! You threw away ${Math.round(J.sfuel)}% of stage ${J.stage}’s fuel.`); }
+    else jMsg(J.stage===1?'Perfect staging! Stage 2 ignition.':'Perfect! Second stage separated.');
+    jNextStage();
+  } else if(J.phase==='edl'&&J.edl.step==='chute'&&!J.edl.chute){
+    const v=J.edl.v;
+    if(v>1700){ J.edl.chute='early'; J.edl.extraV=30; jMsg('Parachute opened too fast and got damaged! You’ll come in faster.'); }
+    else if(v>=1250){ J.edl.chute='good'; jMsg('Parachute open at the right speed. Nice!'); }
+    else { J.edl.chute='late'; J.edl.lowAlt=true; jMsg('Late parachute! You’re lower than planned.'); }
+    Music.blip();
+  }
+}
+function jNextStage(){
+  J.sep.push({y:0,vy:0,rot:0,stage:J.stage});
+  if(J.stage===1){ J.stage=2; J.sfuel=100; }
+  else { J.phase='tmi'; J.fuel=Math.max(25,100-J.wasted); J.t=0; G.paused=true;
+    eventCard({title:'On your way to Mars',who:'Mission Control',
+      body:`The last stage fired you onto a path to Mars. You have ${Math.round(J.fuel)}% of your steering fuel left for the cruise. Stay close to the dotted path, dodge micrometeoroids, and get the crew into the shelter if the Sun flares up.`,
+      data:'Spacecraft make several small “trajectory correction maneuvers” on the way to Mars to stay on target. Curiosity’s radiation detector measured about 1.8 mSv a day inside its spacecraft during the trip, almost 3 times the dose on Mars’ surface.',
+      choices:[{label:'Begin the cruise'}],after:()=>{ J.phase='cruise'; J.t=0; J.y=VH*.5; G.paused=false; jMsg('Day 1. Steer with W and S (or ▲ ▼) to stay on the dotted path.'); }});
+  }
+}
+function jPathY(t){ return VH*.5+Math.sin(t*.11)*VH*.17+Math.sin(t*.031+1)*VH*.08; }
+function jUpdate(dt){
+  if(!J) return;
+  J.msgT-=dt; J.shake=Math.max(0,J.shake-dt*2);
+  if(J.phase==='launch'){
+    J.t+=dt; J.alt+=dt*(J.stage===1?18:32)*(1+J.t*.08);
+    J.sfuel-=dt*(J.stage===1?17:15);
+    if(J.sfuel<=0){ J.sfuel=0; J.flame-=dt; if(J.flame<=-1.2){ J.wasted+=10; J.flame=1; jMsg('Flame-out! The empty stage dragged you down. Drop stages as soon as they reach the green zone.'); jNextStage(); } }
+    else J.flame=1;
+    J.sep.forEach(s=>{ s.vy+=dt*90; s.y+=s.vy*dt; s.rot+=dt*1.5; });
+  } else if(J.phase==='cruise'){
+    J.t+=dt; J.day=Math.min(JDAYS,J.t/JCRUISE*JDAYS);
+    const steer=(K.jump?-1:0)+(K.brake?1:0);
+    if(steer&&!J.shelter&&J.fuel>0){ J.vy+=steer*VH*1.4*dt; J.fuel=Math.max(0,J.fuel-dt*2.2); if(J.fuel<=0) jMsg('Out of steering fuel! You’re drifting.'); }
+    J.vy*=1-1.6*dt; J.vy+=Math.sin(J.t*.7)*VH*.02*dt;      // gentle drift
+    J.y=clamp(J.y+J.vy*dt,VH*.12,VH*.88);
+    const off=Math.abs(J.y-jPathY(J.t))/VH; J.err+=Math.max(0,off-.04)*dt;
+    // radiation: ~1.8 mSv a day in cruise, more in a flare, less in the shelter
+    let rate=1.8; const f=J.flare;
+    if(!J.flareDone&&!f&&J.t>JCRUISE*.45){ J.flare={ph:'warn',t:0}; jMsg('Solar flare detected! Particles arrive in a few days. Press F (or Shelter) to protect the crew.'); }
+    if(f){ f.t+=dt; if(f.ph==='warn'&&f.t>3){ f.ph='on'; f.t=0; } else if(f.ph==='on'){ rate+=14; if(f.t>7){ J.flare=null; J.flareDone=true; jMsg(J.shelter?'The storm is over. Press F to get back to the controls.':'The storm is over.'); } } }
+    J.dose+=rate*(J.shelter?.25:1)*(dt/JCRUISE*JDAYS);
+    // micrometeoroids
+    J.debT-=dt; if(J.debT<=0){ J.debT=.9+Math.random()*.9; J.deb.push({x:VW+30,y:VH*(.1+Math.random()*.8),r:5+Math.random()*9,vx:-(VW*.35+Math.random()*VW*.25),spin:Math.random()*6}); }
+    const sxp=VW*.25;
+    J.deb.forEach(d=>{ d.x+=d.vx*dt; d.spin+=dt*3; if(!d.hit&&Math.hypot(d.x-sxp,d.y-J.y)<d.r+22){ d.hit=true; J.hull=Math.max(0,J.hull-8); J.hits++; J.shake=.6; jMsg('Micrometeoroid hit! Hull damaged.'); } });
+    J.deb=J.deb.filter(d=>d.x>-40&&!d.hit);
+    if(J.t>=JCRUISE) jStartEDL();
+  } else if(J.phase==='edl') jUpdateEDL(dt);
+}
+function jStartEDL(){
+  J.phase='edlcard'; G.paused=true;
+  eventCard({title:'Seven minutes of terror',who:'Mission Control',
+    body:'You’ve reached Mars. First open the parachute when your speed is in the green zone (1,250 to 1,700 km/h). Then fire the landing rockets (W or ▲) and steer (A / D) to touch down gently on the pad next to Base Alpha. Land slower than 2 m/s for a perfect touchdown.',
+    data:'Perseverance hit the Martian atmosphere at about 20,000 km/h. Its heat shield faced about 1,300 °C, its parachute opened at about 1.7 times the speed of sound, and rockets slowed it for the last part. Radio signals take minutes to reach Earth, so the landing runs on autopilot. Today, you’re the autopilot.',
+    choices:[{label:'Begin entry'}],after:()=>{
+      const off=clamp(J.err*90,0,700)*(Math.random()<.5?-1:1);
+      J.edl={step:'entry',t:0,v:19500,heat:0,chute:null,extraV:0,lowAlt:false,x:off,vx:0,alt:0,vy:0,fuel:100};
+      J.phase='edl'; G.paused=false; jMsg('Entering the atmosphere. Hold on!');
+    }});
+}
+function jUpdateEDL(dt){
+  const e=J.edl; e.t+=dt;
+  if(e.step==='entry'){
+    e.v=Math.max(2600,e.v-dt*5200); e.heat=Math.min(1,e.heat+dt*.6); J.shake=.25;
+    if(e.v<=2600){ e.step='chute'; e.t=0; jMsg('Heat shield did its job. Get ready to open the parachute!'); }
+  } else if(e.step==='chute'){
+    e.v=Math.max(600,e.v-dt*(e.chute?900:340));
+    if(!e.chute&&e.v<=820){ e.chute='auto'; e.lowAlt=true; jMsg('The backup timer opened the parachute very late!'); }
+    if(e.chute&&e.v<=620){
+      e.step='power'; e.alt=e.lowAlt?(e.chute==='auto'?900:1400):2100; e.vy=78+e.extraV; e.vx=(Math.random()-.5)*8;
+      jMsg('Heat shield and parachute dropped. Fire the landing rockets with W / ▲, steer with A / D!');
+    }
+  } else if(e.step==='power'){
+    const T=dt*2.4;   // time runs a bit faster here so the descent takes about 20 seconds
+    let ay=3.71;
+    if(K.jump&&e.fuel>0){ ay-=10.5; e.fuel=Math.max(0,e.fuel-T*2.4); }
+    let ax=0; if(e.fuel>0){ if(K.back){ ax-=2.6; e.fuel=Math.max(0,e.fuel-T*.8); } if(K.fwd){ ax+=2.6; e.fuel=Math.max(0,e.fuel-T*.8); } }
+    e.vy+=ay*T; e.vx+=ax*T; e.vx*=1-.05*T;
+    e.alt-=e.vy*T; e.x+=e.vx*T;
+    if(e.alt<=0){ e.alt=0; jLand(); }
+  }
+}
+function jLand(){
+  const e=J.edl, v=Math.hypot(e.vy,e.vx), dist=Math.abs(e.x);
+  let q, reward;
+  if(v<2&&dist<120){ q='perfect'; reward={plate:4,brick:4,kits:1}; }
+  else if(v<4.5&&dist<400){ q='good'; reward={plate:2,brick:2,kits:0}; }
+  else { q='rough'; reward={plate:0,brick:0,kits:0}; }
+  J.phase='done'; G.paused=true;
+  G.journey={q,v,dist,dose:J.dose,hits:J.hits,hull:J.hull,fuel:J.fuel,reward};
+  if(q==='perfect'){ const b=myBadges(); if(!b.ex_land){ b.ex_land={at:new Date().toISOString().slice(0,10),diff:G.diff}; saveBadges(b); } }
+  const title={perfect:'Perfect landing!',good:'Safe landing',rough:'Rough landing'}[q];
+  const rw=q==='perfect'?'The landing team is so happy they’re giving you 4 metal plates, 4 bricks and an extra repair kit.':q==='good'?'The landing team gives you 2 metal plates and 2 bricks to start.':'The rocket’s landing legs are bent but the crew is fine. The team from Base Alpha drives out to pick you up.';
+  openCard(`<h2>${title}</h2>
+  <div class="stats">
+    <div><b>${fmt(v,1)} m/s</b><span>touchdown speed (under 2 is perfect)</span></div>
+    <div><b>${Math.round(dist)} m</b><span>from the landing pad</span></div>
+    <div><b>${fmt(J.dose,0)} mSv</b><span>crew radiation dose on the trip</span></div>
+    <div><b>${J.hull}%</b><span>rocket hull after ${J.hits} micrometeoroid hit${J.hits===1?'':'s'}</span></div>
+  </div>
+  <p>${rw}</p>
+  <p class="data"><b>Real data.</b> At about 1.8 mSv a day, a 200-day trip adds up to roughly 360 mSv, more than half of NASA’s 600 mSv career limit. That’s why shielding and shorter trips matter so much for human missions to Mars.</p>
+  ${q==='perfect'?'<p><b>Badge earned:</b> 🪂 Seven Minutes of Terror</p>':''}
+  <div class="row"><button class="primary" id="bOn">Go to Base Alpha’s garage</button></div>`,c=>c.querySelector('#bOn').onclick=()=>{ hideJControls(); const nx=J.next; J=null; G.state='title'; nx(); });
+}
+function jRender(now){
+  ctx.imageSmoothingEnabled=true;
+  const sh=J.shake>0?(Math.random()-.5)*J.shake*16:0;
+  ctx.setTransform(DPR,0,0,DPR,sh*DPR,sh*.5*DPR);
+  if(J.phase==='launch'||J.phase==='tmi') jRenderLaunch(now);
+  else if(J.phase==='cruise'||J.phase==='edlcard') jRenderCruise(now);
+  else jRenderEDL(now);
+  // status panel
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  const lines=jStatus();
+  ctx.font='700 15px "Atkinson Hyperlegible", system-ui, sans-serif'; ctx.textAlign='left'; ctx.textBaseline='top';
+  const w=Math.min(VW-20,Math.max(...lines.map(l=>ctx.measureText(l).width))+24), h=lines.length*21+14;
+  ctx.fillStyle='rgba(20,12,10,.78)'; ctx.fillRect(10,10,w,h); ctx.fillStyle='#f6e8dc';
+  lines.forEach((l,i)=>ctx.fillText(l,22,17+i*21));
+  if(J.msgT>0&&J.msg){ ctx.font='700 16px "Atkinson Hyperlegible", system-ui, sans-serif'; const mw=Math.min(VW-30,ctx.measureText(J.msg).width+28);
+    ctx.fillStyle='rgba(196,80,31,.92)'; ctx.fillRect((VW-mw)/2,VH*.16,mw,34); ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(J.msg,VW/2,VH*.16+17,VW-40); }
+}
+function jStatus(){
+  if(J.phase==='launch'||J.phase==='tmi') return ['Launch from Earth',`Altitude: ${Math.round(J.alt)} km`,`Stage ${J.stage} fuel: ${Math.round(J.sfuel)}%`,`Fuel saved for the cruise: ${Math.max(25,Math.round(100-J.wasted))}%`];
+  if(J.phase==='cruise'||J.phase==='edlcard') return ['Cruise to Mars',`Day ${Math.round(J.day)} of ${JDAYS}`,`Steering fuel: ${Math.round(J.fuel)}%`,`Hull: ${J.hull}%`,`Crew radiation dose: ${fmt(J.dose,0)} mSv${J.shelter?' (in shelter)':''}`,`Off course: ${fmt(J.err*90,0)} m landing error`];
+  const e=J.edl||{};
+  if(e.step==='power') return ['Powered descent',`Altitude: ${Math.round(e.alt)} m`,`Down speed: ${fmt(e.vy,1)} m/s`,`Distance to pad: ${Math.round(Math.abs(e.x))} m ${e.x>0?'(pad is to your left)':'(pad is to your right)'}`,`Rocket fuel: ${Math.round(e.fuel)}%`];
+  return ['Entry, descent and landing',`Speed: ${Math.round(e.v||0).toLocaleString()} km/h`,e.step==='chute'?'Open the parachute between 1,250 and 1,700 km/h':'Heat shield temperature rising…'];
+}
+function jStars(dx){ ctx.fillStyle='#05040a'; ctx.fillRect(0,0,VW,VH); ctx.fillStyle='#fff'; STARS.forEach((s,i)=>{ const x=((s.x*VW-dx*(1+i%3))%VW+VW)%VW; ctx.globalAlpha=.4+(i%5)*.12; ctx.fillRect(x,s.y*VH/0.7*0.95,s.s,s.s); }); ctx.globalAlpha=1; }
+function jRocket(x,y,s,stage,flame){
+  ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  if(stage<=1){ ctx.fillStyle='#e9e4dc'; ctx.fillRect(-9,10,18,46); ctx.fillStyle='#c4501f'; ctx.fillRect(-9,30,18,4); ctx.fillStyle='#8d867d'; ctx.beginPath(); ctx.moveTo(-9,56); ctx.lineTo(-16,64); ctx.lineTo(-9,64); ctx.fill(); ctx.beginPath(); ctx.moveTo(9,56); ctx.lineTo(16,64); ctx.lineTo(9,64); ctx.fill(); }
+  ctx.fillStyle='#f4f0e9'; ctx.fillRect(-7,-22,14,32); ctx.fillStyle='#2a8f87'; ctx.fillRect(-7,-6,14,3);
+  ctx.fillStyle='#d6cec3'; ctx.beginPath(); ctx.moveTo(-7,-22); ctx.lineTo(0,-38); ctx.lineTo(7,-22); ctx.fill();
+  if(flame>0){ const fy=stage<=1?64:10, fl=18+Math.random()*14; const g=ctx.createLinearGradient(0,fy,0,fy+fl); g.addColorStop(0,'#fff6c0'); g.addColorStop(.4,'#ffb21f'); g.addColorStop(1,'rgba(196,80,31,0)'); ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(-6,fy); ctx.lineTo(0,fy+fl); ctx.lineTo(6,fy); ctx.fill(); }
+  ctx.restore();
+}
+function jRenderLaunch(now){
+  const k=clamp(J.alt/220,0,1);
+  const top=mixA([90,150,225],[5,4,10],k), bot=mixA([170,205,240],[10,12,30],k);
+  const g=ctx.createLinearGradient(0,0,0,VH); g.addColorStop(0,rgb(top)); g.addColorStop(1,rgb(bot)); ctx.fillStyle=g; ctx.fillRect(0,0,VW,VH);
+  if(k>.3){ ctx.fillStyle=`rgba(255,255,255,${(k-.3)})`; STARS.forEach(s=>ctx.fillRect(s.x*VW,s.y*VH,s.s,s.s)); }
+  // Earth falling away
+  const ey=VH*.82+J.alt*2.2, R=VW*1.6;
+  ctx.fillStyle='#2f6fb5'; ctx.beginPath(); ctx.arc(VW/2,ey+R,R,0,7); ctx.fill();
+  ctx.fillStyle='#4f9a4a'; ctx.beginPath(); ctx.ellipse(VW*.35,ey+18,VW*.18,14,0,0,7); ctx.fill();
+  ctx.strokeStyle='rgba(140,200,255,.6)'; ctx.lineWidth=6; ctx.beginPath(); ctx.arc(VW/2,ey+R,R+4,Math.PI*1.1,Math.PI*1.9); ctx.stroke();
+  const s=Math.max(1.2,Math.min(2.2,VH/330));
+  J.sep.forEach(p=>{ ctx.save(); ctx.translate(VW/2-30,VH*.48+64*s+p.y); ctx.rotate(p.rot); ctx.fillStyle='#bdb6ad'; ctx.fillRect(-9*s,-23*s,18*s,46*s); ctx.restore(); });
+  jRocket(VW/2,VH*.48,s,J.phase==='launch'?J.stage:3,J.phase==='launch'&&J.sfuel>0?1:0);
+  // stage fuel gauge
+  const gx=VW/2+70*s, gy=VH*.3, gh=VH*.4;
+  ctx.fillStyle='rgba(20,12,10,.7)'; ctx.fillRect(gx-4,gy-4,30,gh+8); ctx.fillStyle='#3a8f48'; ctx.fillRect(gx,gy+gh*.88,22,gh*.12);
+  ctx.fillStyle='#ffb21f'; ctx.fillRect(gx+4,gy+gh*(1-J.sfuel/100),14,gh*J.sfuel/100);
+  ctx.fillStyle='#fff'; ctx.font='700 12px "Pixelify Sans", monospace'; ctx.textAlign='center'; ctx.fillText('FUEL',gx+11,gy-14);
+}
+function jRenderCruise(now){
+  jStars(J.t*40);
+  const p=clamp(J.t/JCRUISE,0,1);
+  // Sun, Earth shrinking behind, Mars growing ahead
+  const sg=ctx.createRadialGradient(-VW*.05,VH*.2,0,-VW*.05,VH*.2,VH*.6); sg.addColorStop(0,'rgba(255,240,200,.5)'); sg.addColorStop(1,'rgba(255,240,200,0)'); ctx.fillStyle=sg; ctx.fillRect(0,0,VW,VH);
+  ctx.fillStyle='#3d7fb3'; ctx.beginPath(); ctx.arc(VW*.08-p*VW*.1,VH*.8,Math.max(2,26*(1-p)),0,7); ctx.fill();
+  const mr=8+p*p*VH*.32; ctx.fillStyle='#c4501f'; ctx.beginPath(); ctx.arc(VW*.92+mr*.4,VH*.5,mr,0,7); ctx.fill(); ctx.fillStyle='rgba(120,40,20,.5)'; ctx.beginPath(); ctx.arc(VW*.92+mr*.25,VH*.45,mr*.35,0,7); ctx.fill();
+  // planned path
+  ctx.strokeStyle='rgba(95,212,200,.55)'; ctx.setLineDash([6,8]); ctx.lineWidth=2; ctx.beginPath();
+  for(let x=0;x<=VW;x+=12){ const tt=J.t+(x-VW*.25)/(VW*.6)*3; const y=jPathY(tt); x?ctx.lineTo(x,y):ctx.moveTo(x,y); } ctx.stroke(); ctx.setLineDash([]);
+  // debris
+  J.deb.forEach(d=>{ ctx.save(); ctx.translate(d.x,d.y); ctx.rotate(d.spin); ctx.fillStyle='#8d867d'; ctx.beginPath(); ctx.moveTo(-d.r,0); ctx.lineTo(-d.r*.3,-d.r*.8); ctx.lineTo(d.r*.7,-d.r*.5); ctx.lineTo(d.r,d.r*.3); ctx.lineTo(0,d.r); ctx.closePath(); ctx.fill(); ctx.restore(); });
+  // the rocket, flying nose-first toward Mars
+  ctx.save(); ctx.translate(VW*.25,J.y); ctx.rotate(Math.PI/2+clamp(J.vy/VH,-.35,.35));
+  jRocket(0,0,1.15,2,0);
+  // steady cruise glow from the main engine
+  const fl=8+Math.random()*5; ctx.fillStyle='rgba(120,190,255,.75)'; ctx.beginPath(); ctx.moveTo(-5*1.15,10*1.15); ctx.lineTo(0,(10+fl)*1.15); ctx.lineTo(5*1.15,10*1.15); ctx.fill();
+  // side thrusters while steering
+  if((K.jump||K.brake)&&!J.shelter&&J.fuel>0){ ctx.fillStyle='#fff6c0'; ctx.fillRect(K.jump?8:-14,-4,6,6); }
+  if(J.shelter){ ctx.fillStyle='#ffb21f'; ctx.fillRect(-3,-16,6,6); }
+  ctx.restore();
+  if(J.flare&&J.flare.ph==='on'){ for(let i=0;i<30;i++){ ctx.fillStyle=Math.random()<.5?'rgba(255,255,255,.8)':'rgba(255,120,220,.8)'; ctx.fillRect(Math.random()*VW,Math.random()*VH,2,2);} ctx.fillStyle='rgba(200,80,255,.07)'; ctx.fillRect(0,0,VW,VH); }
+}
+function jRenderEDL(now){
+  const e=J.edl||{step:'entry',heat:0};
+  if(e.step!=='power'){
+    const k=e.step==='entry'?0:1;
+    const g=ctx.createLinearGradient(0,0,0,VH); g.addColorStop(0,k?'#c98a5e':'#2a120c'); g.addColorStop(1,k?'#e8c49a':'#7a3a22'); ctx.fillStyle=g; ctx.fillRect(0,0,VW,VH);
+    const cx=VW/2, cy=VH*.45, s=Math.max(1,VH/400);
+    if(e.step==='entry'){ const fg=ctx.createRadialGradient(cx,cy+30*s,0,cx,cy+30*s,90*s); fg.addColorStop(0,`rgba(255,240,180,${.9*e.heat})`); fg.addColorStop(.5,`rgba(255,140,40,${.6*e.heat})`); fg.addColorStop(1,'rgba(255,80,20,0)'); ctx.fillStyle=fg; ctx.fillRect(0,0,VW,VH);
+      for(let i=0;i<14;i++){ ctx.strokeStyle=`rgba(255,${150+Math.random()*80|0},60,.6)`; ctx.beginPath(); const xx=cx+(Math.random()-.5)*80*s; ctx.moveTo(xx,cy+20*s); ctx.lineTo(xx+(Math.random()-.5)*10,cy-80*s-Math.random()*120); ctx.stroke(); } }
+    if(e.chute){ ctx.strokeStyle='#d6cec3'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(cx-14*s,cy-10*s); ctx.lineTo(cx-60*s,cy-130*s); ctx.moveTo(cx+14*s,cy-10*s); ctx.lineTo(cx+60*s,cy-130*s); ctx.stroke();
+      ctx.fillStyle=e.chute==='early'?'#b9b1a6':'#f4f0e9'; ctx.beginPath(); ctx.ellipse(cx,cy-140*s,72*s,30*s,0,Math.PI,0); ctx.fill(); ctx.fillStyle='#c4501f'; ctx.beginPath(); ctx.ellipse(cx,cy-140*s,72*s,30*s,0,Math.PI,Math.PI*1.25); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx,cy-140*s,72*s,30*s,0,Math.PI*1.5,Math.PI*1.75); ctx.fill(); }
+    // the rocket coming in tail-first, with a heat shield over its engine
+    ctx.save(); ctx.translate(cx,cy+22*s); jRocket(0,0,1.3*s,2,0); ctx.restore();
+    ctx.fillStyle='#5d4a3d'; ctx.beginPath(); ctx.ellipse(cx,cy+36*s,16*s,6*s,0,0,Math.PI*2); ctx.fill();
+    // speed window gauge
+    if(e.step==='chute'){ const gx=VW*.72, gy=VH*.25, gh=VH*.45, vmax=2600, vmin=600, toY=v=>gy+gh*(1-(v-vmin)/(vmax-vmin));
+      ctx.fillStyle='rgba(20,12,10,.7)'; ctx.fillRect(gx-4,gy-4,34,gh+8); ctx.fillStyle='#3a8f48'; ctx.fillRect(gx,toY(1700),26,toY(1250)-toY(1700));
+      ctx.fillStyle='#fff'; ctx.fillRect(gx-8,toY(e.v)-2,42,4); ctx.font='700 12px "Pixelify Sans", monospace'; ctx.textAlign='center'; ctx.fillText('SPEED',gx+13,gy-14); }
+    return;
+  }
+  // powered descent: side view down to the pad by Base Alpha
+  const g=ctx.createLinearGradient(0,0,0,VH); g.addColorStop(0,'#c98a5e'); g.addColorStop(1,'#e8c49a'); ctx.fillStyle=g; ctx.fillRect(0,0,VW,VH);
+  const ground=VH*.86, sc=(ground-VH*.1)/2200, cx=VW/2;
+  ctx.fillStyle='#93401f'; ctx.fillRect(0,ground,VW,VH-ground); ctx.fillStyle='#c8693a'; ctx.fillRect(0,ground,VW,5);
+  const px=cx-e.x*sc*1.6;   // pad is at x=0; we keep the lander centred
+  ctx.fillStyle='#d8d3cb'; ctx.fillRect(px-40,ground-6,80,6); ctx.fillStyle='#e8a417'; for(let i=0;i<5;i++) ctx.fillRect(px-36+i*16,ground-6,8,6);
+  ctx.fillStyle='#d8d3cb'; ctx.beginPath(); ctx.ellipse(px-140,ground,70,42,0,Math.PI,0); ctx.fill(); ctx.fillStyle='#4f87a3'; ctx.fillRect(px-160,ground-26,10,8); ctx.fillRect(px-130,ground-26,10,8);
+  ctx.fillStyle='#c4501f'; ctx.font='700 12px "Pixelify Sans", monospace'; ctx.textAlign='center'; ctx.fillText('BASE ALPHA',px-140,ground-50); ctx.fillText('PAD',px,ground-14);
+  const ly=ground-e.alt*sc-18;
+  ctx.save(); ctx.translate(cx,ly);
+  // upright rocket landing on its tail with landing legs out
+  ctx.save(); ctx.translate(0,-8); jRocket(0,0,.9,2,0); ctx.restore();
+  ctx.strokeStyle='#8d867d'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(-6,0); ctx.lineTo(-16,18); ctx.moveTo(6,0); ctx.lineTo(16,18); ctx.stroke();
+  if(K.jump&&e.fuel>0){ const fl=14+Math.random()*12; ctx.fillStyle='#ffb21f'; ctx.beginPath(); ctx.moveTo(-6,1); ctx.lineTo(0,1+fl); ctx.lineTo(6,1); ctx.fill(); }
+  if(K.back&&e.fuel>0){ ctx.fillStyle='#fff6c0'; ctx.fillRect(16,-8,8,4); } if(K.fwd&&e.fuel>0){ ctx.fillStyle='#fff6c0'; ctx.fillRect(-24,-8,8,4); }
+  ctx.restore();
+  // pad direction arrow when the pad is off-screen
+  if(px<20||px>VW-20){ ctx.fillStyle='#fff'; ctx.font='700 16px "Pixelify Sans", monospace'; ctx.textAlign='center'; ctx.fillText(px<20?'◀ PAD':'PAD ▶',px<20?50:VW-50,ground-30); }
 }
 
 /* ============ ROVER PHYSICS: rigid body + spring suspension + rolling circle wheels ============ */
@@ -1828,6 +2103,7 @@ function buildRoverBody(x,dir){
 function bodyAxes(){ const c=Math.cos(rv.a), s=Math.sin(rv.a); return {c,s,right:{x:c,y:s},down:{x:-s,y:c}}; }
 function toWorld(lx,ly,ax){ return {x:rv.p.x+lx*ax.c-ly*ax.s, y:rv.p.y+lx*ax.s+ly*ax.c}; }
 function syncRover(){
+  if(!Number.isFinite(rv.p.x)||!Number.isFinite(rv.p.y)||!Number.isFinite(rv.a)||rv.wh.some(w=>!Number.isFinite(w.q.x)||!Number.isFinite(w.q.y))){ const x=Number.isFinite(rv.x)?rv.x:X0; buildRoverBody(x,rv.dir); return; }
   rv.x=rv.p.x; rv.vx=rv.v.x; rv.pitch=-rv.a;
   rv.y=rv.wh.reduce((s,w)=>s+w.q.y,0)/rv.wh.length+WRAD;
 }
@@ -2121,7 +2397,7 @@ function endMission(won,why){
     const bres=done?awardBadges():{got:[],fresh:[]};
     openCard(`<h2>Mission complete</h2>
     <div class="stars" aria-label="${stars} of 3 stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
-    <p><b>${DIFFS[G.diff].name}${G.play==='multi'?' multiplayer':''}.</b> Base Bravo now has ${fmt(food,0)} crew-days of food. With 2 people, that’s about ${fmt(food/2,0)} days.</p>
+    <p><b>${DIFFS[G.diff].name}${G.play==='multi'?' multiplayer':''}.</b>${G.journey&&G.journey.q?` Landing on Mars: ${({perfect:'perfect',good:'safe',rough:'rough'})[G.journey.q]}.`:''} Base Bravo now has ${fmt(food,0)} crew-days of food. With 2 people, that’s about ${fmt(food/2,0)} days.</p>
     ${stats}
     <h3>Where food was lost</h3><p>${losses}</p>
     ${done?`<h3>Badges earned this mission</h3><div class="badges">${bres.got.map(id=>BADGES.find(b=>b.id===id)).filter(Boolean).map(b=>badgeHtml(b,true,bres.fresh.includes(b.id))).join('')}</div>`:`<p class="data"><b>Badges.</b> Deliver every crate to earn mission, speed and health badges.</p>`}
@@ -2146,9 +2422,9 @@ function endMission(won,why){
 let VW=0,VH=0,DPR=1,TS=24;
 const lc=document.createElement('canvas'), lx=lc.getContext('2d');
 function resize(){
-  DPR=Math.min(2,devicePixelRatio||1); VW=innerWidth; VH=innerHeight;
+  DPR=Math.min(1.5,devicePixelRatio||1); VW=innerWidth; VH=innerHeight;
   cv.width=Math.round(VW*DPR); cv.height=Math.round(VH*DPR);
-  lc.width=cv.width; lc.height=cv.height;
+  lc.width=Math.max(1,Math.round(cv.width/2)); lc.height=Math.max(1,Math.round(cv.height/2));
   TS=Math.round(clamp(Math.min(VH/24,VW/30),16,32));
 }
 addEventListener('resize',resize);
@@ -2157,7 +2433,7 @@ const HILLS=[0,1].map(L=>{const a=[];const r=rng(99+L);let v=0;for(let i=0;i<800
 const sx=x=>(x-G.cam.x)*TS+VW/2, sy=y=>(y-G.cam.y)*TS+VH/2;
 
 function render(now){
-  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.setTransform(DPR,0,0,DPR,0,0); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; ctx.setLineDash([]);
   ctx.imageSmoothingEnabled=false;
   // camera
   let fx,fy;
@@ -2254,9 +2530,7 @@ function render(now){
     ctx.fillStyle='rgba(200,80,255,.06)'; ctx.fillRect(0,0,VW,VH);
   }
   if(G.glitch>0){
-    ctx.setTransform(1,0,0,1,0,0);
-    for(let i=0;i<6;i++){ const yy=Math.random()*cv.height, hh=8+Math.random()*30*DPR; ctx.drawImage(cv,0,yy,cv.width,hh,(Math.random()-.5)*40*DPR,yy,cv.width,hh); }
-    ctx.setTransform(DPR,0,0,DPR,0,0);
+    for(let i=0;i<6;i++){ ctx.fillStyle=i%2?'rgba(95,212,200,.18)':'rgba(255,255,255,.12)'; ctx.fillRect(0,Math.random()*VH,VW,3+Math.random()*10); }
   }
   if(G.state==='title'||G.state==='over'){ ctx.fillStyle='rgba(20,10,6,.2)'; ctx.fillRect(0,0,VW,VH); }
 }
@@ -2266,7 +2540,7 @@ function drawLight(L,s){
   { const fx_=G.eva?as.x+as.w/2:rv.x, fy_=G.eva?as.y+1:rv.y-1; const cd=fy_-floorA[clamp(Math.floor(fx_),0,W-1)]; a=Math.max(a,clamp((cd-3)/12,0,.55)); }
   const camTube = G.cam.x>tubeX0-10&&G.cam.x<tubeX1+10;
   if(a<.03&&!camTube&&!G.lamps.length) return;
-  lx.setTransform(DPR,0,0,DPR,0,0); lx.globalCompositeOperation='source-over'; lx.clearRect(0,0,VW,VH);
+  lx.setTransform(DPR/2,0,0,DPR/2,0,0); lx.globalCompositeOperation='source-over'; lx.clearRect(0,0,VW,VH);
   lx.fillStyle=`rgba(8,4,12,${a})`; lx.fillRect(0,0,VW,VH);
   if(camTube){ lx.fillStyle='rgba(8,4,12,.62)'; lx.fillRect(sx(tubeX0),sy(37),(tubeX1-tubeX0+1)*TS,5*TS); }
   lx.globalCompositeOperation='destination-out';
@@ -2282,7 +2556,7 @@ function drawLight(L,s){
   G.lamps.forEach(([lx_,ly_])=>{ const X=sx(lx_+.5),Y=sy(ly_+.5), R=TS*14; const g=lx.createRadialGradient(X,Y,0,X,Y,R); g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(.55,'rgba(0,0,0,.9)'); g.addColorStop(1,'rgba(0,0,0,0)'); lx.fillStyle=g; lx.fillRect(X-R,Y-R,R*2,R*2); });
   // base windows glow
   [[26,36],[1386,36]].forEach(([bx,by])=>{ const X=sx(bx),Y=sy(by); if(X<-400||X>VW+400) return; const g=lx.createRadialGradient(X,Y,0,X,Y,TS*15); g.addColorStop(0,'rgba(0,0,0,.95)'); g.addColorStop(1,'rgba(0,0,0,0)'); lx.fillStyle=g; lx.fillRect(0,0,VW,VH); });
-  ctx.setTransform(1,0,0,1,0,0); ctx.drawImage(lc,0,0); ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.setTransform(1,0,0,1,0,0); ctx.drawImage(lc,0,0,cv.width,cv.height); ctx.setTransform(DPR,0,0,DPR,0,0);
 }
 function R(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(x,y,w,h); }
 function drawDecor(){
@@ -2460,8 +2734,20 @@ function updHUD(){
 
 /* ============ LOOP ============ */
 let lastTime=performance.now(), hudT=0;
+let frameErrs=0;
 function frame(now){
+  requestAnimationFrame(frame);
+  try{ step(now); frameErrs=0; }
+  catch(err){
+    frameErrs++; console.error('Frame error',err);
+    try{ ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; }catch(_){}
+    if(frameErrs===30&&G&&G.state==='play') say('Rover computer','Graphics hiccup: the screen was reset. If it keeps happening, please send us a screenshot.','warn');
+  }
+}
+function step(now){
+  if(!Number.isFinite(now)) now=performance.now();
   const rdt=clamp((now-lastTime)/1000,0,.05); lastTime=now;
+  if(G.state==='journey'&&J){ if(!G.paused) jUpdate(rdt); jRender(now); NET.dt=rdt; try{ netTick(rdt); }catch(_){} return; }
   if(G.state==='play'&&!G.paused){
     if(G.warp>1&&(G.eva||Math.abs(rv.vx)>.3)){ G.warp=1; buildControls(); }
     const sdt=rdt*G.warp;
@@ -2490,7 +2776,6 @@ function frame(now){
   NET.dt=rdt; try{ netTick(rdt); }catch(_){}
   render(now);
   hudT-=rdt; if(hudT<=0&&G.state==='play'){ hudT=.1; updHUD(); }
-  requestAnimationFrame(frame);
 }
 
 /* ============ BOOT ============ */
