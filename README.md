@@ -8,9 +8,23 @@ Base Alpha is shutting down. Your crew has to move all 20 crates of food 24 km a
 
 Open `index.html` in any modern browser. It is a single file with no build step, server or installs. To host it free, turn on GitHub Pages for this repository (Settings → Pages → deploy from the `main` branch).
 
+## Deploy with multiplayer on Vercel (public, free)
+
+The `api/` folder holds three small serverless functions (`online`, `sync`, `leaderboard`) that give the public version live multiplayer, the online player count and the world leaderboard. They store data in a free Upstash Redis database. No npm packages are needed.
+
+1. Put `index.html`, `README.md` and the whole `api` folder in this GitHub repository.
+2. Sign in at [vercel.com](https://vercel.com) with GitHub, click **Add New → Project**, and import this repository. Keep the framework preset as **Other** and click **Deploy**.
+3. In the new Vercel project, open the **Storage** tab, add **Upstash Redis** (free plan) and connect it to the project. This adds the database keys as environment variables automatically.
+4. Go to **Deployments** and **Redeploy** so the functions pick up the keys.
+5. Open your `https://<project-name>.vercel.app` link. The loading screen should show how many people are online, and the Multiplayer button should be enabled.
+
+How it works: each player in multiplayer sends their rover position and block edits about three times a second, and gets back everyone else's. The shared world keeps the last 4,000 block edits, so builds stay even after players leave. Each player's best time is kept on the leaderboard; callsigns are filtered for bad words and impossible times are rejected.
+
+Free-plan limits: polling uses a few database commands per player per second, which is fine for a class or hackathon but would need a paid plan (or a WebSocket service) for hundreds of players at once.
+
 ## Solo, multiplayer and the leaderboard
 
-A loading screen leads to a start screen where you pick **Solo** or **Multiplayer**. Every game uses the same map, so times are comparable: finish a mission that delivers every food crate and your mission time is posted to the **world leaderboard** of fastest crews (your best time is kept). The leaderboard and multiplayer need the claude.ai version while signed in; elsewhere the game remembers your best time on that device.
+A loading screen leads to a start screen where you pick **Solo** or **Multiplayer**. Every game uses the same map, so times are comparable: finish a mission that delivers every food crate and your mission time is posted to the **world leaderboard** of fastest crews (your best time is kept). The leaderboard and multiplayer work on the claude.ai version (signed in) and on a Vercel deployment (see above); on plain static hosting like GitHub Pages the game plays solo and remembers your best time on that device.
 
 ## Online multiplayer
 

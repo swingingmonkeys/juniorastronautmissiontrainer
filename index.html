@@ -1370,7 +1370,7 @@ async function netInit(){
   }catch(_){ NET.room=null; }
 }
 const NET_TILES=new Set([T.AIR,T.REG,T.BAS,T.SAND,T.ICE,T.BRICK,T.PLATE,T.DOOR,T.LAMP,T.BEACON,T.PGLASS,T.LADDER]);
-function netEdit(x,y,t){ if(!NET.room) return; NET.edits.push([++NET.seq,x,y,t]); if(NET.edits.length>40) NET.edits.shift(); }
+function netEdit(x,y,t){ if(!NET.room) return; if(NET.room.http){ HTTP.out.push([x,y,t]); return; } NET.edits.push([++NET.seq,x,y,t]); if(NET.edits.length>40) NET.edits.shift(); }
 function netApplyEdits(p){
   const ed=p.presence&&p.presence.ed; if(!Array.isArray(ed)||!tiles) return;
   let last=NET.lastSeq.get(p.peer)||0, changed=false;
@@ -1398,6 +1398,7 @@ function netTick(dt){
       ev:G.eva?1:0,ax:+as.x.toFixed(2),ay:+as.y.toFixed(2),af:as.face,km:+clamp(kmAt(rv.x),0,24).toFixed(1),
       dl:Math.round(crewDays(G.bravo)),al:G.alpha.length,ed:NET.edits});
   }
+  if(NET.room.http){ delete p.ed; HTTP.last=p; return; }
   NET.room.presence(p).catch(()=>{});
 }
 function netUI(){
@@ -1406,7 +1407,7 @@ function netUI(){
   const t=document.getElementById('tOnline');
   if(t) t.textContent=onlineText();
   const lo=document.getElementById('ldOnline'); if(lo) lo.textContent=onlineText();
-  const mb=document.getElementById('bMulti'); if(mb&&!mb.dataset.busy) mb.disabled=!LOBBY.room;
+  const mb=document.getElementById('bMulti'); if(mb&&!mb.dataset.busy) mb.disabled=!(LOBBY.room||LOBBY.http);
 }
 function rosterCard(){
   const rows=NET.peers.filter(p=>p.kind==='viewer').map(p=>{ const s=p.presence||{}, me=p.isMe&&p.sameTab;
@@ -1449,14 +1450,78 @@ function drawGhosts(now,dt){
 
 /* ============ LOBBY, SOLO / MULTIPLAYER CHOICE, WORLD LEADERBOARD ============ */
 const LOBBY={room:null,count:0,multi:0,ready:false};
-function lobbyMode(m){ try{ if(LOBBY.room) LOBBY.room.presence({pl:m}).catch(()=>{}); }catch(_){} }
+function lobbyMode(m){ HTTP.mode=m; try{ if(LOBBY.room) LOBBY.room.presence({pl:m}).catch(()=>{}); }catch(_){} }
 function onlineText(){
-  if(!LOBBY.room) return 'Online player counts, multiplayer and the world leaderboard work when the game is opened on claude.ai while signed in. Solo works everywhere.';
+  if(!LOBBY.room&&!LOBBY.http) return 'Online player counts, multiplayer and the world leaderboard work when the game is opened on claude.ai while signed in. Solo works everywhere.';
   if(!LOBBY.ready) return 'Looking for other astronauts…';
   const n=Math.max(1,LOBBY.count), m=LOBBY.multi;
   return `${n} ${n===1?'person has':'people have'} the game open right now. `+(m?`${m} ${m===1?'is':'are'} playing multiplayer.`:'No one is in multiplayer yet. Be the first!');
 }
 const LB={db:null,uid:null,rows:[],ready:false,mine:null,err:''};
+
+/* ---- Self-hosted backend (Vercel + Upstash Redis): used when claude.ai's room isn't available ---- */
+const HTTP={on:false,id:'',pid:'',cursor:0,out:[],last:null,known:new Set(),busy:false,mode:'menu',hbT:null,loop:false};
+(()=>{ const r=()=>'p'+Math.random().toString(36).slice(2,12);
+  try{ HTTP.pid=localStorage.getItem('msr_pid')||''; if(!HTTP.pid){ HTTP.pid=r(); localStorage.setItem('msr_pid',HTTP.pid); } }catch(_){ HTTP.pid=r(); }
+  HTTP.id=HTTP.pid+'-'+Math.random().toString(36).slice(2,6); })();
+async function httpPost(path,b){ const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b),cache:'no-store'}); const j=await r.json().catch(()=>({})); if(!r.ok) throw Object.assign(new Error(j.error||('HTTP '+r.status)),{server:j.error}); return j; }
+async function httpProbe(){
+  if(!/^https?:$/.test(location.protocol)) return false;
+  try{
+    const r=await fetch('api/online',{cache:'no-store'}); if(!r.ok) return false;
+    const j=await r.json(); if(typeof j.count!=='number') return false;
+    HTTP.on=true; LOBBY.http=true; LOBBY.count=j.count; LOBBY.multi=j.multi; LOBBY.ready=true; httpBeat(); netUI(); return true;
+  }catch(_){ return false; }
+}
+function httpBeat(){
+  clearTimeout(HTTP.hbT);
+  const go=async()=>{
+    if(HTTP.mode!=='multi'){ try{ const j=await httpPost('api/sync',{id:HTTP.id,mode:HTTP.mode,p:{n:NET.name,c:NET.col,st:'menu'}}); LOBBY.count=j.count; LOBBY.multi=j.multi; LOBBY.ready=true; netUI(); }catch(_){} }
+    HTTP.hbT=setTimeout(go,5000);
+  };
+  go();
+}
+function netApplyOne(x,y,t){
+  if(!Number.isInteger(x)||!Number.isInteger(y)||x<1||x>=W-1||y<1||y>=H-2||!NET_TILES.has(t)) return false;
+  if(t!==T.AIR&&(overlapsRover(x,y)||(G.eva&&x+1>as.x&&x<as.x+as.w&&y+1>as.y&&y<as.y+as.h))) return false;
+  const cur=getT(x,y); if(cur===T.BED||cur===T.HULL||cur===T.GLASS) return false;
+  setT(x,y,t); if(t===T.AIR&&y>=floorA[x]&&bgA[y*W+x]!==2) bgA[y*W+x]=1;
+  return true;
+}
+async function httpSyncLoop(){
+  if(!NET.room||!NET.room.http){ HTTP.loop=false; return; }
+  HTTP.loop=true;
+  if(!HTTP.busy){
+    HTTP.busy=true;
+    const ed=HTTP.out.splice(0,40);
+    try{
+      const j=await httpPost('api/sync',{id:HTTP.id,mode:'multi',p:HTTP.last||{n:NET.name,c:NET.col,st:'menu'},ed,cursor:HTTP.cursor});
+      LOBBY.count=j.count; LOBBY.multi=j.multi;
+      if(NET.room&&NET.room.http){
+        let maxS=HTTP.cursor;
+        for(const e of (j.edits||[])){ if(e.s>maxS) maxS=e.s; if(e.by!==HTTP.id&&tiles) netApplyOne(+e.x,+e.y,+e.t); }
+        HTTP.cursor=maxS;
+        const ids=new Set(), peers=[];
+        for(const q of (j.peers||[])){ ids.add(q.id); peers.push({peer:q.id,isMe:q.id===HTTP.id,sameTab:q.id===HTTP.id,kind:'viewer',presence:q.p||{}}); }
+        if(!ids.has(HTTP.id)) peers.push({peer:HTTP.id,isMe:true,sameTab:true,kind:'viewer',presence:HTTP.last||{n:NET.name}});
+        if(G&&G.state==='play'){
+          for(const q of peers) if(!q.isMe&&!HTTP.known.has(q.peer)&&q.presence.n) say('Comms',`${cleanName(q.presence.n)} is online in this world.`);
+          for(const k of HTTP.known) if(!ids.has(k)){ const n=NET.names.get(k); if(n) say('Comms',`${n} went offline.`); NET.ghost.delete(k); }
+        }
+        HTTP.known=new Set([...ids].filter(i=>i!==HTTP.id));
+        peers.forEach(q=>{ if(q.presence&&q.presence.n) NET.names.set(q.peer,cleanName(q.presence.n)); });
+        NET.peers=peers; netUI();
+      }
+    }catch(_){ HTTP.out.unshift(...ed); if(HTTP.out.length>200) HTTP.out.length=200; }
+    HTTP.busy=false;
+  }
+  setTimeout(httpSyncLoop,300);
+}
+async function lbRefresh(){
+  if(!LB.http) return;
+  try{ const r=await fetch('api/leaderboard',{cache:'no-store'}); const j=await r.json(); if(Array.isArray(j.rows)){ LB.rows=j.rows.filter(x=>typeof x.minutes==='number').sort((a,b)=>a.minutes-b.minutes); LB.ready=true; LB.err=''; } }
+  catch(_){ LB.err='The leaderboard is unavailable right now.'; }
+}
 async function lobbyInit(){
   try{
     if(!window.claude||typeof window.claude.use!=='function') return;
@@ -1465,6 +1530,12 @@ async function lobbyInit(){
     lobby.onPeers(ch=>{ const v=ch.peers.filter(p=>p.kind==='viewer'); LOBBY.count=v.length; LOBBY.multi=v.filter(p=>p.presence&&p.presence.pl==='multi').length; LOBBY.ready=true; netUI(); },()=>{ LOBBY.room=null; netUI(); });
     lobbyMode('menu');
   }catch(_){ LOBBY.room=null; }
+}
+async function servicesInit(){
+  await lobbyInit();
+  if(!LOBBY.room) await httpProbe();
+  await lbInit();
+  if(!LB.db&&HTTP.on){ LB.http=true; LB.uid=HTTP.pid; await lbRefresh(); }
 }
 async function lbInit(){
   try{
@@ -1485,6 +1556,13 @@ async function submitRun(run){
   // run = {minutes, food, trips, lvl, mode}
   let note='';
   try{ const lb=localBest(); if(!lb||run.minutes<lb.minutes) localStorage.setItem('msr_best',JSON.stringify(run)); }catch(_){}
+  if(LB.http){
+    try{
+      const j=await httpPost('api/leaderboard',{pid:HTTP.pid,name:NET.name,minutes:Math.round(run.minutes),food:Math.round(run.food),trips:run.trips,lvl:run.lvl,mode:run.mode});
+      await lbRefresh();
+      return {saved:j.saved,rank:j.rank,note:j.saved?(j.old!=null?`New personal best! (was ${fmtTime(j.old)})`:'Your first time on the leaderboard!'):`Your best is still ${fmtTime(j.best)}.`};
+    }catch(e){ return {saved:false,note:e.server||'Your time couldn’t be posted to the leaderboard just now.'}; }
+  }
   if(!LB.db||!LB.uid) return {saved:false,note:'Open the game on claude.ai while signed in to post your time to the world leaderboard.'};
   try{
     const ref=LB.db.doc('leaderboard/'+LB.uid);
@@ -1497,13 +1575,14 @@ async function submitRun(run){
   }
 }
 function rankOf(minutes){ return LB.rows.filter(r=>r.minutes<minutes).length+1; }
-function leaderboardCard(back){
+function leaderboardCard(back,fresh){
+  if(LB.http&&!fresh) lbRefresh().then(()=>{ if(!overlay.hidden&&card.querySelector('table.lb,#lbEmpty')) leaderboardCard(back,true); });
   const rows=LB.rows.slice(0,25).map((r,i)=>`<tr class="${r.id===LB.uid?'me':''}"><td>${i+1}</td><td>${esc(cleanName(r.name)||'Astronaut')}${r.id===LB.uid?' (you)':''}</td><td>${fmtTime(r.minutes)}</td><td>${r.food|0}</td><td>${r.trips|0}</td><td>${r.mode==='multi'?'Online':'Solo'}</td></tr>`).join('');
   const lb=localBest();
   openCard(`<h2>Fastest crews on Mars</h2>
   <p>Ranked by mission time to move every food crate from Base Alpha to Base Bravo. Everyone plays the same map, so times are fair.</p>
-  ${LB.db?(rows?`<div style="overflow-x:auto"><table class="lb"><thead><tr><th>#</th><th>Callsign</th><th>Time</th><th>Crew-days</th><th>Trips</th><th>Mode</th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p><b>No finished missions yet.</b> Be the first crew on the board!</p>`)
-    :`<p>${LB.err||'The world leaderboard works when the game is opened on claude.ai while signed in.'}</p>`}
+  ${(LB.db||LB.http)?(rows?`<div style="overflow-x:auto"><table class="lb"><thead><tr><th>#</th><th>Callsign</th><th>Time</th><th>Crew-days</th><th>Trips</th><th>Mode</th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p id="lbEmpty"><b>No finished missions yet.</b> Be the first crew on the board!</p>`)
+    :`<p>${LB.err||'The world leaderboard works on claude.ai (signed in) or on the Vercel version of the game.'}</p>`}
   ${lb?`<p class="data"><b>Your best on this device:</b> ${fmtTime(lb.minutes)}, ${lb.food|0} crew-days delivered in ${lb.trips} trips.</p>`:''}
   <div class="row"><button class="primary" id="bOk">Back</button></div>`,c=>c.querySelector('#bOk').onclick=()=>(back||titleCard)());
 }
@@ -1515,13 +1594,14 @@ function loadingCard(){
   <p id="ldTxt" style="font-family:var(--pixel);font-size:16px">${steps[0]}…</p>
   <p id="ldOnline" style="font-size:16px;font-weight:700;color:var(--teal)">Looking for other astronauts…</p>`,c=>{
     let i=0; const bar=c.querySelector('#ldBar'), txt=c.querySelector('#ldTxt');
-    const services=Promise.race([Promise.all([lobbyInit(),lbInit()]),new Promise(r=>setTimeout(r,4000))]);
+    const services=Promise.race([servicesInit(),new Promise(r=>setTimeout(r,4500))]);
     const tick=setInterval(()=>{ i++; if(bar) bar.style.width=Math.min(95,i*19)+'%'; if(txt&&steps[i]) txt.textContent=steps[i]+'…'; },380);
     Promise.all([services,new Promise(r=>setTimeout(r,2400))]).then(()=>{ clearInterval(tick); if(bar) bar.style.width='100%'; netUI(); setTimeout(titleCard,900); });
   });
 }
 async function netJoin(){
   if(NET.room) return true;
+  if(!LOBBY.room&&HTTP.on){ NET.room={http:true}; HTTP.mode='multi'; HTTP.cursor=0; HTTP.known=new Set(); HTTP.out=[]; if(!HTTP.loop) httpSyncLoop(); netUI(); return true; }
   if(!LOBBY.room) return false;
   try{
     const r=await LOBBY.room.join('mars-world-v1');
@@ -1539,7 +1619,7 @@ async function netJoin(){
     netUI(); return true;
   }catch(_){ NET.room=null; return false; }
 }
-function netLeave(){ try{ if(NET.room&&NET.room.leave) Promise.resolve(NET.room.leave()).catch(()=>{}); }catch(_){} NET.room=null; NET.peers=[]; NET.ghost.clear(); NET.lastSeq.clear(); NET.edits=[]; netUI(); }
+function netLeave(){ try{ if(NET.room&&!NET.room.http&&NET.room.leave) Promise.resolve(NET.room.leave()).catch(()=>{}); }catch(_){} NET.room=null; NET.peers=[]; NET.ghost.clear(); NET.lastSeq.clear(); NET.edits=[]; netUI(); }
 
 /* ============ ROVER PHYSICS: rigid body + spring suspension + rolling circle wheels ============ */
 const WRAD=.75, MW=.22, IW=.5*MW*WRAD*WRAD;
@@ -1870,7 +1950,7 @@ function endMission(won,why){
     ${done?`<h3>World leaderboard</h3><p id="lbNote">Your time: <b>${fmtTime(G.t)}</b>. Posting it…</p>`:`<p class="data"><b>Leaderboard.</b> Only missions that deliver every crate get a time on the leaderboard.</p>`}
     <div class="row"><button class="primary" id="bAgain">Fly another mission</button><button id="bLB2">Leaderboard</button></div>`,c=>{ c.querySelector('#bAgain').onclick=restart; c.querySelector('#bLB2').onclick=()=>leaderboardCard(()=>endCardAgain());
       if(done) submitRun({minutes:G.t,food:food,trips:G.trips,lvl:rv.lvl,mode:G.play}).then(r=>{ const el=document.getElementById('lbNote'); if(!el) return;
-        const rank=LB.db?` That puts you <b>#${rankOf(G.t)}</b> in the world.`:''; el.innerHTML=`Your time: <b>${fmtTime(G.t)}</b>. ${r.note}${r.saved?rank:''}`; G.endHtml=card.innerHTML; }); });
+        const rank=(LB.db||LB.http)?` That puts you <b>#${r.rank||rankOf(G.t)}</b> in the world.`:''; el.innerHTML=`Your time: <b>${fmtTime(G.t)}</b>. ${r.note}${r.saved?rank:''}`; G.endHtml=card.innerHTML; }); });
     G.endHtml=card.innerHTML;
   } else {
     openCard(`<h2>Mission aborted</h2>
