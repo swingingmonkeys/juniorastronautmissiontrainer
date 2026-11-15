@@ -1,0 +1,22 @@
+{
+  "project": "Supply Run to Bravo (Junior Astronaut Mission Trainer)",
+  "event": "NASA Space Apps Challenge 2026",
+  "superIntelligenceUsed": true,
+  "conceptAndDesign": {
+    "by": "The Swinging Monkeys team (the team members who took part in the project)",
+    "siGenerated": false
+  },
+  "tools": [
+    { "name": "Claude", "provider": "Anthropic", "type": "large language model / AI assistant" }
+  ],
+  "siAssisted": [
+    { "kind": "code", "paths": ["index.html", "lebron.html", "lebron3.0.html", "lebron4.0.html", "lebron5.0.html"], "use": "Game code generated and edited with SI from the team's design" },
+    { "kind": "code", "paths": ["api/_redis.js", "api/leaderboard.js", "api/online.js", "api/sync.js"], "use": "Server code generated with SI" },
+    { "kind": "code+text", "paths": ["guide/index.html"], "use": "Guide website written with SI" },
+    { "kind": "image/video", "paths": ["guide/gifs/*.gif", "guide/gifs/*.jpg", "guide/img/*.jpg", "lebron2.0.png"], "use": "Captures of the SI-assisted game; visible 'SI-generated' watermark and metadata" },
+    { "kind": "text", "paths": ["README.md", "AI_DISCLOSURE.md"], "use": "Documentation drafted with SI" }
+  ],
+  "audioFiles": false,
+  "nasaBrandingUsed": false,
+  "details": "AI_DISCLOSURE.md"
+}

@@ -1,3 +1,6 @@
+// Super Intelligence (SI) disclosure (NASA Space Apps Challenge 2026): concept and design by
+// the Swinging Monkeys team; this code was generated with SI assistance (Claude by Anthropic) and
+// reviewed by the team. See AI_DISCLOSURE.md.
 // GET  /api/leaderboard?diff=medium -> top 25 fastest complete missions on that difficulty
 // POST /api/leaderboard {pid,name,minutes,food,trips,lvl,mode,diff} -> keeps each player's best time per difficulty
 const { pipeline, cleanId, cleanName, send, body } = require('./_redis');

@@ -1,3 +1,6 @@
+// Super Intelligence (SI) disclosure (NASA Space Apps Challenge 2026): concept and design by
+// the Swinging Monkeys team; this code was generated with SI assistance (Claude by Anthropic) and
+// reviewed by the team. See AI_DISCLOSURE.md.
 // POST /api/sync  {id, mode:'menu'|'solo'|'multi', join?:'medium'|'hard', lobby?, p:{...presence}, ed:[[x,y,tile],...], cursor}
 // Saves this player's presence and block edits; returns counts, the other players in the same lobby and new edits.
 // Multiplayer lobbies hold at most 5 astronauts; "join" picks the first lobby with room.
