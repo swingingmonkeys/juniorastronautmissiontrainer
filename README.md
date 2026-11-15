@@ -1,8 +1,12 @@
 # Supply Run to Bravo – Henhen Mars Mission Trainer
 
-A Minecraft-style Mars survival and driving game by **The Royal Beauties** for the NASA Space Apps Challenge 2026 challenge *Build a Junior Astronaut Mission Trainer*.
+A Minecraft-style Mars survival and driving game by **Swinging Monkeys** for the NASA Space Apps Challenge 2026 challenge *Build a Junior Astronaut Mission Trainer*.
 
 Base Alpha is shutting down. Your crew has to move all 20 crates of food 24 km across Mars to Base Bravo. The rover only carries 200 kg at a time and your pack holds just 40 items, so you make several trips (oxygen is refilled at each base), unless you explore deep caves for rare minerals and build a bigger rover.
+
+## Use of Super Intelligence (SI)
+
+**Concept and design by the Swinging Monkeys team**, the team members who took part in the project. The whole prototype was then **built with Super Intelligence (SI) assistance**: the code, the guide website and the documentation were generated and edited with **Claude (Anthropic)**, directed, tested and reviewed by the team. Every image and GIF in this repository has a visible "SI-generated" watermark, every source file starts with an SI disclosure comment, and the HTML pages carry SI metadata tags. No NASA logos or branding are used. Full details: [AI_DISCLOSURE.md](AI_DISCLOSURE.md) (machine-readable: [ai-disclosure.json](ai-disclosure.json)).
 
 ## Play
 

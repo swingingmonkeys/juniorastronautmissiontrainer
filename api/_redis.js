@@ -1,3 +1,6 @@
+// Super Intelligence (SI) disclosure (NASA Space Apps Challenge 2026): concept and design by
+// the Swinging Monkeys team; this code was generated with SI assistance (Claude by Anthropic) and
+// reviewed by the team. See AI_DISCLOSURE.md.
 // Tiny helper for Upstash Redis over its REST API (no npm packages needed).
 // Vercel's Upstash Redis integration adds one of these pairs of environment variables.
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
