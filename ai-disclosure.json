@@ -14,9 +14,11 @@
     { "kind": "code", "paths": ["api/_redis.js", "api/leaderboard.js", "api/online.js", "api/sync.js"], "use": "Server code generated with SI" },
     { "kind": "code+text", "paths": ["guide/index.html"], "use": "Guide website written with SI" },
     { "kind": "image/video", "paths": ["guide/gifs/*.gif", "guide/gifs/*.jpg", "guide/img/*.jpg", "lebron2.0.png"], "use": "Captures of the SI-assisted game; visible 'SI-generated' watermark and metadata" },
+    { "kind": "video+audio+text", "paths": ["guide/video/trailer.mp4", "guide/video/trailer-poster.jpg", "guide/video/trailer-script.txt", "guide/video/trailer-captions.vtt"], "use": "30-second trailer: footage captured from the SI-assisted game; edit, titles, captions, narration script and original synthesized background music generated with SI; visible 'SI-generated' watermark in every frame; voiceover to be recorded later by adult team members" },
     { "kind": "text", "paths": ["README.md", "AI_DISCLOSURE.md"], "use": "Documentation drafted with SI" }
   ],
-  "audioFiles": false,
+  "audioFiles": true,
+  "audioNote": "Only audio: the trailer's original background music, synthesized by an SI-written script (no samples, no third-party music, no voices).",
   "nasaBrandingUsed": false,
   "details": "AI_DISCLOSURE.md"
 }

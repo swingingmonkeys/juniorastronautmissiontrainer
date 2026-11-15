@@ -1,0 +1,50 @@
+SUPPLY RUN TO BRAVO - 30-SECOND TRAILER
+Narration script for voiceover (adult team members only)
+Team: Swinging Monkeys - NASA Space Apps Challenge 2026
+=====================================================================
+
+The words below are burned into the video as captions. Each line has a
+time window: start reading when the caption appears and finish before
+it fades. About 72 words in 30 seconds, so read at a lively but clear
+pace (roughly 2.5 words per second). Short pauses between scenes are fine.
+
+Suggested casting: Voice A (mission narrator) and Voice B (mission
+control). One person can read everything if that is easier.
+Space Apps rule: only adults may record. No voices of anyone under 18.
+
+---------------------------------------------------------------------
+TIME          SCENE ON SCREEN               VOICE  NARRATION
+---------------------------------------------------------------------
+00:00-00:03   Title: "Supply Run to Bravo"   A      Mars base Bravo needs food. Can you deliver it?
+00:03-00:06.5 Rocket launch, stage drop      A      First, launch your rocket. Drop each stage on time!
+00:06.5-00:10 Rover garage                   A      Build your rover. Every kilogram counts!
+00:10-00:14   Driving, oxygen and battery    A      Drive across Mars. Watch your oxygen and battery.
+00:14-00:18   Astronaut builds brick walls   B      A dust storm is coming. Build a shelter!
+00:18-00:21   Storm hits the shelter         B      Real Mars storms can block the sun for weeks.
+00:21-00:24   Particle storm warning         B      Solar flare! Shield your crew from radiation.
+00:24-00:27   Arriving at Base Bravo         A      Deliver the food to Bravo, trip by trip.
+00:27-00:30   End title, topic badges        A+B    Plan, make trade-offs, and think like an astronaut!
+---------------------------------------------------------------------
+
+ON-SCREEN LEARNING LABELS (not read aloud)
+  LAUNCH ............... You learn: timing rocket stages
+  MASS BUDGET .......... You learn: every kilogram counts
+  LIFE SUPPORT + POWER . You learn: planning oxygen and energy
+  BUILD A SHELTER ...... You learn: engineering with Mars materials
+  DUST STORMS .......... Real data: the 2018 storm that silenced Opportunity
+  RADIATION ............ Real data: solar flares measured on Mars
+  DELIVERY ............. You learn: planning trips and trade-offs
+  End badges: Power, Life support, Radiation, Comms, Mass budget
+
+MIXING NOTES
+  - The video ships with an original music bed only (no voice yet),
+    peaking around -6 dBFS (about -20 LUFS).
+  - When you add the voiceover, duck the music by about 8 to 10 dB
+    under the voice, and aim for about -16 LUFS for the final mix.
+  - Timed captions in WebVTT format: trailer-captions.vtt (same folder).
+  - Record at 48 kHz in a quiet room; leave 0.5 s of silence at the start.
+
+DISCLOSURE
+  The footage was captured automatically from the game; the video edit,
+  captions, script draft and music were made with SI assistance (Claude
+  by Anthropic). The video carries a visible "SI-generated" watermark.

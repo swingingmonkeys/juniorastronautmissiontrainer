@@ -6,7 +6,7 @@ Base Alpha is shutting down. Your crew has to move all 20 crates of food 24 km a
 
 ## Use of Super Intelligence (SI)
 
-**Concept and design by the Swinging Monkeys team**, the team members who took part in the project. The whole prototype was then **built with Super Intelligence (SI) assistance**: the code, the guide website and the documentation were generated and edited with **Claude (Anthropic)**, directed, tested and reviewed by the team. Every image and GIF in this repository has a visible "SI-generated" watermark, every source file starts with an SI disclosure comment, and the HTML pages carry SI metadata tags. No NASA logos or branding are used. Full details: [AI_DISCLOSURE.md](AI_DISCLOSURE.md) (machine-readable: [ai-disclosure.json](ai-disclosure.json)).
+**Concept and design by the Swinging Monkeys team**, the team members who took part in the project. The whole prototype was then **built with Super Intelligence (SI) assistance**: the code, the guide website and the documentation were generated and edited with **Claude (Anthropic)**, directed, tested and reviewed by the team. Every image, GIF and video in this repository has a visible "SI-generated" watermark (including the 30-second trailer on the guide page), every source file starts with an SI disclosure comment, and the HTML pages carry SI metadata tags. No NASA logos or branding are used. Full details: [AI_DISCLOSURE.md](AI_DISCLOSURE.md) (machine-readable: [ai-disclosure.json](ai-disclosure.json)).
 
 ## Play
 
