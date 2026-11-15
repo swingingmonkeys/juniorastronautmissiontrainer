@@ -43,6 +43,14 @@ h1 span{color:var(--sand)}
 .btn.ghost{background:transparent;border-color:#f2d6c366;color:#f8eee6}
 .btn:hover{filter:brightness(1.1)}
 .shot{border-radius:var(--radius);box-shadow:0 20px 50px #0009;border:1px solid #ffffff22}
+.trailer{margin:0}
+.trailer .tv{position:relative}
+.trailer video{display:block;width:100%;height:auto;background:#1b0f0b}
+.trailer .snd{float:left;margin:0 12px 6px 0;font-family:inherit;font-weight:700;font-size:15px;line-height:1;color:#fff;background:#1b0f0bdd;border:2px solid #e2ad6f;border-radius:999px;padding:9px 14px;cursor:pointer}
+.trailer .snd[aria-pressed="true"]{background:#c4501fee;border-color:#c4501f}
+.trailer .snd:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.trailer figcaption{font-size:14px;color:#cdb8aa;margin-top:12px;overflow:hidden}
+.trailer figcaption a{color:var(--sand)}
 section{padding:64px 0}
 section.alt{background:#eadccf}
 section.dark{background:var(--bg2);color:#f3e6dc}
@@ -162,7 +170,14 @@ footer a{color:#f2c9a8;overflow-wrap:anywhere}
           <a class="btn ghost" href="#tradeoffs">See the trade-offs</a>
         </div>
       </div>
-      <img class="shot" src="img/drive.jpg" alt="The six-wheeled rover driving across the red Mars surface, with oxygen, battery and radiation gauges on the right" width="1200" height="700">
+      <figure class="trailer">
+        <div class="tv">
+          <video id="trailer" class="shot" src="video/trailer.mp4" poster="video/trailer-poster.jpg" width="1280" height="720" muted autoplay loop playsinline controls preload="metadata" aria-describedby="trailerCap">
+            Your browser can't play this video. <a href="video/trailer.mp4">Download the trailer</a>.
+          </video>
+        </div>
+        <figcaption id="trailerCap"><button type="button" id="sndBtn" class="snd" aria-pressed="false" aria-controls="trailer">🔇 Sound is off · Turn on</button> 30-second trailer with captions. Sound starts off: use the button or the speaker icon to turn it on or off. <a href="video/trailer-script.txt">Read the narration script</a>.</figcaption>
+      </figure>
     </div>
   </div>
 </header>
@@ -496,6 +511,15 @@ footer a{color:#f2c9a8;overflow-wrap:anywhere}
 </footer>
 
 <script>
+// trailer: starts muted (browsers only autoplay silent video); one button turns sound on and off
+(()=>{
+  const v=document.getElementById('trailer'), b=document.getElementById('sndBtn'); if(!v||!b) return;
+  const sync=()=>{ const on=!v.muted; b.setAttribute('aria-pressed',on); b.textContent=on?'🔊 Sound is on · Turn off':'🔇 Sound is off · Turn on'; };
+  b.addEventListener('click',()=>{ const on=v.muted; v.muted=!on; if(on){ v.currentTime=0; v.play().catch(()=>{}); } sync(); });
+  v.addEventListener('volumechange',sync);
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ v.removeAttribute('autoplay'); v.pause(); }
+  sync();
+})();
 // play GIFs on click (posters keep the page light)
 document.querySelectorAll('.gif').forEach(g=>{
   const img=g.querySelector('img'), btn=g.querySelector('button.play');
