@@ -172,11 +172,11 @@ footer a{color:#f2c9a8;overflow-wrap:anywhere}
       </div>
       <figure class="trailer">
         <div class="tv">
-          <video id="trailer" class="shot" src="video/trailer.mp4" poster="video/trailer-poster.jpg" width="1280" height="720" muted autoplay loop playsinline controls preload="metadata" aria-describedby="trailerCap">
+          <video id="trailer" class="shot" src="video/trailer.mp4" poster="video/trailer-poster.jpg" width="1280" height="720" autoplay loop playsinline controls preload="auto" aria-describedby="trailerCap">
             Your browser can't play this video. <a href="video/trailer.mp4">Download the trailer</a>.
           </video>
         </div>
-        <figcaption id="trailerCap"><button type="button" id="sndBtn" class="snd" aria-pressed="false" aria-controls="trailer">🔇 Sound is off · Turn on</button> 30-second trailer with captions. Sound starts off: use the button or the speaker icon to turn it on or off. <a href="video/trailer-script.txt">Read the narration script</a>.</figcaption>
+        <figcaption id="trailerCap"><button type="button" id="sndBtn" class="snd" aria-pressed="true" aria-controls="trailer">🔊 Sound is on · Mute</button> 30-second trailer with captions. It plays with sound; use this button or the speaker icon to mute it. <a href="video/trailer-script.txt">Read the narration script</a>.</figcaption>
       </figure>
     </div>
   </div>
@@ -511,13 +511,22 @@ footer a{color:#f2c9a8;overflow-wrap:anywhere}
 </footer>
 
 <script>
-// trailer: starts muted (browsers only autoplay silent video); one button turns sound on and off
+// trailer: plays with sound. Most browsers block sound until the visitor has
+// interacted with the page, so if that happens it plays muted and turns the sound
+// on at the first click, tap or key press (unless the visitor muted it on purpose).
 (()=>{
   const v=document.getElementById('trailer'), b=document.getElementById('sndBtn'); if(!v||!b) return;
-  const sync=()=>{ const on=!v.muted; b.setAttribute('aria-pressed',on); b.textContent=on?'🔊 Sound is on · Turn off':'🔇 Sound is off · Turn on'; };
-  b.addEventListener('click',()=>{ const on=v.muted; v.muted=!on; if(on){ v.currentTime=0; v.play().catch(()=>{}); } sync(); });
-  v.addEventListener('volumechange',sync);
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ v.removeAttribute('autoplay'); v.pause(); }
+  let chose=false, waiting=false;
+  const sync=()=>{ const on=!v.muted; b.setAttribute('aria-pressed',on);
+    b.textContent=on?'🔊 Sound is on · Mute':(waiting?'🔇 Tap anywhere for sound':'🔇 Muted · Turn sound on'); };
+  const evs=['pointerdown','keydown','touchstart'];
+  const unlock=e=>{ evs.forEach(n=>removeEventListener(n,unlock,true)); if(!waiting) return; waiting=false; if(e&&b.contains(e.target)) return;
+    if(!chose){ v.muted=false; v.play().catch(()=>{}); } sync(); };
+  b.addEventListener('click',()=>{ chose=true; waiting=false; v.muted=!v.muted; if(!v.muted){ if(v.currentTime>1) v.currentTime=0; v.play().catch(()=>{}); } sync(); });
+  v.addEventListener('volumechange',()=>{ if(waiting&&!v.muted) waiting=false; sync(); });
+  v.muted=false;
+  const p=v.play();
+  if(p&&p.catch) p.catch(()=>{ v.muted=true; waiting=true; sync(); v.play().catch(()=>{}); evs.forEach(e=>addEventListener(e,unlock,true)); });
   sync();
 })();
 // play GIFs on click (posters keep the page light)
