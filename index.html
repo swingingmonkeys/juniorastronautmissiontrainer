@@ -906,7 +906,8 @@ function titleCard(){
     <button class="mode primary" id="bSolo"><b>Solo</b><small>Just you and your crewmate on Mars.</small></button>
     <button class="mode" id="bMulti"><b>Multiplayer</b><small>Join a lobby of up to 5 astronauts. Medium or Hard, with stronger storms.</small></button>
   </div>
-  <div class="row"><button id="bLB">Leaderboard</button><button id="bBadges">Badges (${BADGES.filter(b=>myBadges()[b.id]).length}/${BADGES.length})</button><button id="bHowTo">How to play</button><button id="bSet">Settings</button></div>`,c=>{
+  <div class="row"><button id="bLB">Leaderboard</button><button id="bBadges">Badges (${BADGES.filter(b=>myBadges()[b.id]).length}/${BADGES.length})</button><button id="bHowTo">How to play</button><button id="bSet">Settings</button></div>
+  <p style="font-size:15px;margin:10px 0 0"><a href="guide/" target="_blank" rel="noopener" style="color:var(--teal);font-weight:700">📖 Open the full player’s guide (with clips of the big trade-offs)</a></p>`,c=>{
     c.querySelector('#iName').addEventListener('change',e=>setCallsign(e.target.value));
     c.querySelector('#iName').addEventListener('keydown',e=>e.stopPropagation());
     netUI();
@@ -980,6 +981,7 @@ function helpCard(back){
   <p>When a storm warning comes in, wall in the rover and give it a roof. Any solid block keeps sand out, airlock doors let you walk through, ice blocks are extra good against radiation, and glass in the roof lets sunlight reach your panels. A red glow shows where the shelter is still open; green means sealed.</p>
   <h3>Keep the mission alive</h3>
   <p>Oxygen runs down the whole time, and faster on EVAs or if the hull leaks. The battery powers the wheels, heaters and life support; solar panels recharge it only in sunlight. Hard landings, deep cold, radiation and dust can spoil food crates. Get to Base Bravo with as much food as you can.</p>
+  <p style="font-size:15px;margin:10px 0 0"><a href="guide/" target="_blank" rel="noopener" style="color:var(--teal);font-weight:700">📖 Open the full player’s guide (with clips of the big trade-offs)</a></p>
   <div class="row"><button class="primary" id="bOk">Got it</button></div>`,c=>c.querySelector('#bOk').onclick=()=>{ if(back) back(); else closeCard(); });
 }
 function dataCard(){
