@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Play: Supply Run to Bravo (Junior Astronaut Mission Trainer)</title>
+<meta name="description" content="A player's guide to Supply Run to Bravo, the Junior Astronaut Mission Trainer game from NASA Space Apps Challenge 2026: controls, the mission, hazards, and the trade-offs between power, life support, radiation shielding and communication.">
+<style>
+:root{
+  --bg:#120d0b; --bg2:#1c1411; --panel:#f3e9df; --ink:#2a1d17; --muted:#7a6457;
+  --rust:#c4501f; --sand:#e2a970; --teal:#2a8f87; --gold:#e8a417; --red:#d9534f; --green:#3a8f48; --violet:#7a5cc7;
+  --line:#d9c6b5; --radius:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--panel)}
+a{color:var(--rust)}
+img{max-width:100%;display:block}
+.wrap{max-width:1100px;margin:0 auto;padding:0 22px}
+header.hero{background:radial-gradient(ellipse at 70% 120%,#7a2f12 0%,#3a170b 38%,var(--bg) 70%);color:#f8eee6;padding:22px 0 64px;position:relative;overflow:hidden}
+header.hero:before{content:"";position:absolute;inset:0;background-image:radial-gradient(1.2px 1.2px at 20% 30%,#fff9 50%,transparent 51%),radial-gradient(1px 1px at 70% 20%,#fff8 50%,transparent 51%),radial-gradient(1.4px 1.4px at 40% 70%,#fff6 50%,transparent 51%),radial-gradient(1px 1px at 85% 60%,#fff7 50%,transparent 51%),radial-gradient(1px 1px at 10% 80%,#fff6 50%,transparent 51%);background-size:340px 260px;opacity:.7;pointer-events:none}
+nav.top{display:flex;gap:18px;align-items:center;flex-wrap:wrap;position:relative}
+nav.top .brand{font-weight:800;letter-spacing:.02em;margin-right:auto;color:#fff;text-decoration:none}
+nav.top a{color:#f2d6c3;text-decoration:none;font-size:15px}
+nav.top a:hover{color:#fff}
+.hero-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:center;margin-top:48px;position:relative}
+.kicker{display:inline-block;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--sand);border:1px solid #e2a97066;border-radius:999px;padding:4px 12px}
+h1{font-size:clamp(34px,5vw,56px);line-height:1.05;margin:16px 0 14px}
+h1 span{color:var(--sand)}
+.lede{font-size:19px;color:#ead7c9;max-width:36em}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--rust);color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px;border:2px solid var(--rust)}
+.btn.ghost{background:transparent;border-color:#f2d6c366;color:#f8eee6}
+.btn:hover{filter:brightness(1.1)}
+.shot{border-radius:var(--radius);box-shadow:0 20px 50px #0009;border:1px solid #ffffff22}
+section{padding:64px 0}
+section.alt{background:#eadccf}
+section.dark{background:var(--bg2);color:#f3e6dc}
+section.dark .sub{color:#cdb8aa}
+h2{font-size:clamp(28px,3.4vw,38px);line-height:1.15;margin:0 0 10px}
+h3{font-size:22px;margin:0 0 8px}
+.sub{color:var(--muted);font-size:18px;max-width:46em;margin:0 0 30px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:s}
+.step{background:#fff8f1;border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px;position:relative}
+.step:before{counter-increment:s;content:counter(s);position:absolute;top:-14px;left:16px;width:30px;height:30px;border-radius:50%;background:var(--rust);color:#fff;font-weight:800;display:grid;place-items:center;font-size:15px}
+.step h3{font-size:18px;margin-top:8px}
+.step p{margin:0;font-size:15.5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:start}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:#fff8f1;border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.card h4{margin:0 0 4px;font-size:17px}
+.card p{margin:0;font-size:15.5px}
+figure{margin:0}
+figcaption{font-size:14px;color:var(--muted);margin-top:8px}
+section.dark figcaption{color:#b9a294}
+table{width:100%;border-collapse:collapse;font-size:15.5px;background:#fff8f1;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line)}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#f0e1d3;font-size:14px;letter-spacing:.02em}
+tr:last-child td{border-bottom:0}
+kbd{display:inline-block;min-width:26px;text-align:center;font:700 13px/1 ui-monospace,Menlo,Consolas,monospace;background:#fff;border:1px solid #c9b5a4;border-bottom-width:3px;border-radius:6px;padding:5px 7px;color:var(--ink);white-space:nowrap}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tabs button{font:inherit;font-size:15px;font-weight:700;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#fff8f1;cursor:pointer;color:var(--ink)}
+.tabs button[aria-selected=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tabpanel[hidden]{display:none}
+/* trade-offs */
+.sys{display:grid;grid-template-columns:1.25fr 1fr;gap:30px;align-items:center;padding:34px 0;border-top:1px solid #ffffff1a}
+.sys:first-of-type{border-top:0}
+.sys.flip{grid-template-columns:1fr 1.25fr}
+.sys.flip .gif{order:2}
+.tag{display:inline-block;font-size:12.5px;letter-spacing:.12em;font-weight:800;text-transform:uppercase;padding:3px 10px;border-radius:5px;color:#14212e;margin-bottom:10px}
+.gif{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 14px 34px #0008;border:3px solid var(--c,#e8a417);background:#000}
+.gif img{width:100%}
+.gif button.play{position:absolute;inset:0;width:100%;border:0;background:transparent;cursor:pointer}
+.gif button.play span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#14212ee6;color:#fff;font:700 16px system-ui;padding:12px 18px;border-radius:999px}
+.gif.playing button.play{display:none}
+.gives{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 4px}
+.gives div{background:#ffffff0d;border:1px solid #ffffff1f;border-radius:10px;padding:10px 12px;font-size:15px}
+.gives b{display:block;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+.gives .up b{color:#8fd19e}.gives .down b{color:#f29b97}
+.num{font-variant-numeric:tabular-nums}
+/* web */
+.web{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:8px 0 10px}
+.web div{border-radius:12px;padding:14px;color:#14212e;font-size:14.5px;line-height:1.45}
+.web b{display:block;font-size:16px;margin-bottom:4px}
+/* planner */
+.planner{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;background:#fff8f1;border:1px solid var(--line);border-radius:18px;padding:22px}
+.planner label{display:block;font-size:14px;font-weight:700;margin:10px 0 4px}
+.planner select{width:100%;font:inherit;font-size:15px;padding:8px;border-radius:8px;border:1px solid var(--line);background:#fff}
+.counter{display:flex;align-items:center;gap:10px}
+.counter button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;font:700 18px system-ui;cursor:pointer}
+.counter output{min-width:20px;text-align:center;font-weight:800}
+.prow{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+.meter{margin:8px 0 16px}
+.meter .lab{display:flex;justify-content:space-between;font-size:14.5px;font-weight:700}
+.meter .bar{height:14px;border-radius:7px;background:#e6d6c7;overflow:hidden;margin-top:4px}
+.meter .bar i{display:block;height:100%;background:var(--teal);transition:width .25s}
+.meter .bar i.over{background:var(--red)}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.readout div{background:#f4e7da;border-radius:10px;padding:10px 12px}
+.readout b{display:block;font-size:22px}
+.readout span{font-size:13.5px;color:var(--muted)}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:10px;background:#14212e;color:#fff;font-size:15px}
+.route{position:relative;margin:26px 0 8px;overflow:hidden}
+.route .mk:first-child{transform:translateX(-12%)}.route .mk:last-child{transform:translateX(-88%)}
+.route .strip{display:flex;height:22px;border-radius:11px;overflow:hidden}
+.route .strip div{height:100%}
+.route .marks{position:relative;height:120px}
+.route .mk{position:absolute;top:6px;transform:translateX(-50%);font-size:12.5px;text-align:center;width:110px;line-height:1.25}
+.route .mk:before{content:"";display:block;width:2px;height:12px;background:var(--ink);margin:0 auto 4px}
+.route .mk.low{top:52px}
+.route .mk.low:before{height:58px;margin-top:-46px}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.badges div{background:#fff8f1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.badges b{display:block;font-size:15px}
+.tip{border-left:5px solid var(--teal);background:#e3efe9;padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0;font-size:15.5px}
+footer{background:var(--bg);color:#bba393;padding:34px 0;font-size:14.5px}
+footer a{color:#f2c9a8;overflow-wrap:anywhere}
+@media (max-width:900px){
+  .hero-grid,.two,.sys,.sys.flip,.planner{grid-template-columns:1fr}
+  .sys.flip .gif{order:0}
+  .steps,.cards3{grid-template-columns:1fr 1fr}
+  .web{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  .steps,.cards3,.gives,.readout,.prow{grid-template-columns:1fr}
+  .route .mk{width:80px;font-size:11px}
+  nav.top a:not(.brand){display:none}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <nav class="top" aria-label="Sections">
+      <a class="brand" href="#">🚀 Supply Run to Bravo · Player's Guide</a>
+      <a href="#mission">The mission</a>
+      <a href="#controls">Controls</a>
+      <a href="#tradeoffs">Trade-offs</a>
+      <a href="#planner">Planner</a>
+      <a href="#hazards">Hazards</a>
+      <a href="#tips">Tips</a>
+    </nav>
+    <div class="hero-grid">
+      <div>
+        <span class="kicker">NASA Space Apps Challenge 2026 · Junior Astronaut Mission Trainer</span>
+        <h1>Learn to drive food across <span>24 km of Mars</span>.</h1>
+        <p class="lede">Base Alpha is shutting down. You and your crewmate must move every food crate to Base Bravo while you juggle <b>power</b>, <b>life support</b>, <b>radiation shielding</b> and <b>communication</b>. This guide shows you how to play, and how to make the trade-offs that win the mission.</p>
+        <div class="cta">
+          <a class="btn" href="https://juniorastronautmissiontrainer-three.vercel.app/" target="_blank" rel="noopener">▶ Play the game</a>
+          <a class="btn ghost" href="#tradeoffs">See the trade-offs</a>
+        </div>
+      </div>
+      <img class="shot" src="img/drive.jpg" alt="The six-wheeled rover driving across the red Mars surface, with oxygen, battery and radiation gauges on the right" width="1200" height="700">
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section id="mission">
+  <div class="wrap">
+    <h2>The mission in 6 steps</h2>
+    <p class="sub">The clock runs at 1 real second = 1 mission minute. One drive from Alpha to Bravo is about 2.5 mission hours, so each trip takes only a few real minutes.</p>
+    <div class="steps">
+      <div class="step"><h3>Pick a mode</h3><p>Choose <b>Solo</b> (Easy, Medium or Hard) or <b>Multiplayer</b> (Medium or Hard, up to 5 astronauts per lobby, storms about 20% stronger). Type a callsign for the leaderboard.</p></div>
+      <div class="step"><h3>Fly to Mars (optional)</h3><p>A mini-game: drop rocket stages at the right moment, steer through a 203-day cruise dodging micrometeoroids, then land. A perfect landing earns bonus plates, bricks and a repair kit. You can also <b>Skip to Mars</b>.</p></div>
+      <div class="step"><h3>Build your rover</h3><p>Choose a frame, wheels, suspension, motors, power source and shielding. Every part has a mass, and the rover must stay under the <b>2,300 kg</b> launch limit.</p></div>
+      <div class="step"><h3>Load up at Base Alpha</h3><p>Fill the <b>200 kg</b> cargo rack with food crates (50 kg each) and supplies: oxygen tanks, repair kits and an insulation blanket. Food left at Alpha slowly spoils.</p></div>
+      <div class="step"><h3>Drive 24 km east</h3><p>Cross the rocky plain, dune field, crater rim, lava tube and icy lowland. Survive dust storms and solar flares, and park beside Bravo's dome to dock and unload.</p></div>
+      <div class="step"><h3>Repeat and finish</h3><p>Drive back for the rest of the food (oxygen and repairs are refilled at each base). When every crate is at Bravo, press <b>Finish the mission</b> to post your time and earn badges.</p></div>
+    </div>
+    <div class="tip"><b>Win and lose.</b> The mission ends badly if your oxygen hits zero. It ends well when all the food is at Bravo: your <b>mission time</b> goes on the leaderboard (faster is better), and badges reward keeping the crew and the 100 crew-days of food in good shape.</div>
+  </div>
+</section>
+
+<section id="controls" class="alt">
+  <div class="wrap">
+    <h2>Controls</h2>
+    <p class="sub">Keyboard and mouse on a computer. On phones and tablets, on-screen buttons cover the same actions.</p>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" aria-controls="t-drive" id="b-drive">In the rover</button>
+      <button role="tab" aria-selected="false" aria-controls="t-eva" id="b-eva">On an EVA (outside)</button>
+      <button role="tab" aria-selected="false" aria-controls="t-fly" id="b-fly">Getting to Mars</button>
+    </div>
+    <div class="two">
+      <div>
+        <div class="tabpanel" id="t-drive" role="tabpanel" aria-labelledby="b-drive">
+          <table>
+            <tr><th>Key</th><th>What it does</th></tr>
+            <tr><td><kbd>D</kbd> <kbd>→</kbd></td><td>Drive right (east, toward Bravo)</td></tr>
+            <tr><td><kbd>A</kbd> <kbd>←</kbd></td><td>Drive left. Facing the other way, the rover backs up slowly</td></tr>
+            <tr><td><kbd>S</kbd> <kbd>Space</kbd></td><td>Brake</td></tr>
+            <tr><td><kbd>U</kbd></td><td>Turn the rover around (stop first)</td></tr>
+            <tr><td><kbd>F</kbd></td><td>Storm shelter + electronics safe mode (rover stops, crew moves behind the water wall or food stores)</td></tr>
+            <tr><td><kbd>H</kbd></td><td>Cargo heater on / off</td></tr>
+            <tr><td><kbd>O</kbd></td><td>Stow / deploy the solar panels</td></tr>
+            <tr><td><kbd>T</kbd></td><td>Wait faster (×4) while parked</td></tr>
+            <tr><td><kbd>E</kbd></td><td>Go outside on an EVA (rover must be stopped)</td></tr>
+            <tr><td><kbd>C</kbd></td><td>Fabricator (crafting)</td></tr>
+            <tr><td><kbd>P</kbd> <kbd>Esc</kbd> / <kbd>M</kbd></td><td>Pause / music on or off</td></tr>
+          </table>
+        </div>
+        <div class="tabpanel" id="t-eva" role="tabpanel" aria-labelledby="b-eva" hidden>
+          <table>
+            <tr><th>Key</th><th>What it does</th></tr>
+            <tr><td><kbd>A</kbd> <kbd>D</kbd></td><td>Walk</td></tr>
+            <tr><td><kbd>W</kbd> <kbd>Space</kbd></td><td>Jump (low gravity: 38% of Earth's)</td></tr>
+            <tr><td>Click / tap (hold)</td><td>Dig a block</td></tr>
+            <tr><td>Right click, or <kbd>Q</kbd></td><td>Place a block / switch between Dig and Build</td></tr>
+            <tr><td><kbd>1</kbd>–<kbd>0</kbd>, wheel</td><td>Pick a block from the hotbar</td></tr>
+            <tr><td><kbd>I</kbd></td><td>Inventory (holds 40 items)</td></tr>
+            <tr><td><kbd>C</kbd></td><td>Fabricator: bricks, glass, metal plates, airlock doors, ladders, lamps, beacons (near the rover)</td></tr>
+            <tr><td><kbd>Shift</kbd>+<kbd>1</kbd>–<kbd>5</kbd></td><td>Repair jobs next to the rover: 1 patch hull, 2 fix wheels, 3 clean panels, 4 re-strap cargo, 5 repair electronics. Stand still until the bar fills</td></tr>
+            <tr><td><kbd>W</kbd> / <kbd>S</kbd> on a ladder</td><td>Climb up / down into caves</td></tr>
+            <tr><td><kbd>E</kbd></td><td>Climb back into the rover</td></tr>
+          </table>
+        </div>
+        <div class="tabpanel" id="t-fly" role="tabpanel" aria-labelledby="b-fly" hidden>
+          <table>
+            <tr><th>Key</th><th>What it does</th></tr>
+            <tr><td><kbd>Enter</kbd> <kbd>X</kbd></td><td>Drop a rocket stage when its fuel bar reaches the green zone; open the parachute (between 1,250 and 1,700 km/h)</td></tr>
+            <tr><td><kbd>W</kbd> <kbd>S</kbd> / <kbd>▲</kbd> <kbd>▼</kbd></td><td>Steer in the cruise to stay on the dotted path and dodge micrometeoroids (3 hearts). In the landing, <kbd>W</kbd> fires the landing engine</td></tr>
+            <tr><td><kbd>A</kbd> <kbd>D</kbd></td><td>Steer sideways while landing (aim for the pad, under 2 m/s for a perfect landing)</td></tr>
+            <tr><td><kbd>F</kbd></td><td>Move the crew into the storm shelter when a solar flare hits on the way</td></tr>
+          </table>
+        </div>
+      </div>
+      <figure>
+        <img class="shot" id="ctrlImg" src="img/drive.jpg" alt="Game screen while driving" loading="lazy" width="1200" height="700">
+        <figcaption id="ctrlCap">The trip bar (top left) shows where you are on the 24 km route. Gauges on the right show oxygen, battery, hull, wheels, electronics, solar panels, radiation and cargo. Messages appear bottom left.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="tradeoffs" class="dark">
+  <div class="wrap">
+    <h2>The big trade-offs</h2>
+    <p class="sub">Every system on the rover pulls against the others. Each clip below was recorded in the real game, with a short explanation on top. Click a clip to play it.</p>
+
+    <div class="web">
+      <div style="background:var(--gold)"><b>⚡ Power</b>Battery and solar panels run the wheels, heaters and life support.</div>
+      <div style="background:#6cc17c"><b>🫁 Life support</b>Oxygen for two people: 0.07 kg an hour, always ticking.</div>
+      <div style="background:#f08a86"><b>☢️ Radiation shield</b>Solar flares push the dose 500× higher and break electronics.</div>
+      <div style="background:#5cc3b9"><b>📡 Communication</b>Mission Control warns you about storms and flares, if the radio works.</div>
+    </div>
+
+    <div class="sys" style="--c:var(--gold)">
+      <div class="gif" style="--c:var(--gold)"><img src="gifs/power.jpg" data-gif="gifs/power.gif" alt="Animated clip: battery draw while driving, parking in sunlight, turning off the cargo heater and stowing the panels" width="780" height="455"><button class="play" aria-label="Play the power clip"><span>▶ Play clip</span></button></div>
+      <div>
+        <span class="tag" style="background:var(--gold)">Power</span>
+        <h3>Power vs. everything else</h3>
+        <p>Life support takes <b class="num">0.7 kW</b> all the time. Keeping the cabin warm, the cargo heater (<b class="num">0.5 kW</b>) and night-time lights add more, and driving adds the most: about <b class="num">4 to 9 kW</b> depending on speed, hills and how heavy you are. Solar panels give at most about 2 kW at noon with clean panels and clear skies, and nothing at night, in the lava tube or deep in a dust storm.</p>
+        <div class="gives">
+          <div class="up"><b>Saves power</b>Driving slower, parking in sunlight, heater off, an efficient motor, a reactor.</div>
+          <div class="down"><b>Costs you</b>Time and oxygen while you wait; frozen food below −40 °C; dusty panels if you leave them out in a storm.</div>
+        </div>
+        <p style="font-size:15px;color:#cdb8aa">If the battery hits zero, the rover can't drive and the heaters switch off until the sun recharges it.</p>
+      </div>
+    </div>
+
+    <div class="sys flip">
+      <div class="gif" style="--c:#6cc17c"><img src="gifs/life-support.jpg" data-gif="gifs/life-support.gif" alt="Animated clip: adding oxygen tanks at Base Alpha pushes a food crate off the 200 kg cargo rack" width="780" height="455"><button class="play" aria-label="Play the life support clip"><span>▶ Play clip</span></button></div>
+      <div>
+        <span class="tag" style="background:#6cc17c">Life support</span>
+        <h3>Air vs. food on every trip</h3>
+        <p>Two astronauts breathe <b class="num">0.84 kg</b> of oxygen each per day (a real NASA planning number). The rover starts with 0.25 kg, about <b class="num">3.6 hours</b>. Each <b>oxygen tank</b> adds 0.35 kg (about 5 hours) but takes <b class="num">14 kg</b> of the 200 kg cargo rack, the same space that carries food.</p>
+        <div class="gives">
+          <div class="up"><b>More oxygen</b>Time to shelter from storms, do EVAs and fix things.</div>
+          <div class="down"><b>Costs you</b>Fewer crates per trip, so more trips, more driving and more time.</div>
+        </div>
+        <p style="font-size:15px;color:#cdb8aa">Oxygen also drains 1.5× faster on an EVA, and a damaged hull (below 60%) leaks air. If oxygen hits zero, the mission is over.</p>
+      </div>
+    </div>
+
+    <div class="sys">
+      <div class="gif" style="--c:#f08a86"><img src="gifs/radiation.jpg" data-gif="gifs/radiation.gif" alt="Animated clip: a solar flare raises the radiation dose rate, then shelter mode cuts it while the rover can no longer move" width="780" height="455"><button class="play" aria-label="Play the radiation clip"><span>▶ Play clip</span></button></div>
+      <div>
+        <span class="tag" style="background:#f08a86">Radiation shield</span>
+        <h3>Shelter vs. keep moving</h3>
+        <p>Normal Mars radiation is about <b class="num">0.03 mSv/h</b>. During a solar flare it jumps to about <b class="num">14 mSv/h</b> in the open, and particles scramble the electronics (navigation reboots, heater or motor crashes, radio faults, battery dumps). Press <kbd>F</kbd> for <b>shelter + safe mode</b>: the dose is halved and faults become about 10× rarer.</p>
+        <div class="gives">
+          <div class="up"><b>Best shelter</b>The lava tube (km 14 to 17) blocks about 97%. A roof of 3+ blocks or ice blocks also works. Water-jacket walls bring shelter mode down to about 3 mSv/h.</div>
+          <div class="down"><b>Costs you</b>Shelter mode locks the wheels while oxygen ticks. Water walls weigh 200 kg.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sys flip">
+      <div class="gif" style="--c:#5cc3b9"><img src="gifs/comms.jpg" data-gif="gifs/comms.gif" alt="Animated clip: a radio fault turns Mission Control messages into static; an astronaut goes on an EVA to repair the electronics" width="780" height="455"><button class="play" aria-label="Play the communication clip"><span>▶ Play clip</span></button></div>
+      <div>
+        <span class="tag" style="background:#5cc3b9">Communication</span>
+        <h3>Fix the radio vs. save air</h3>
+        <p>Radio signals take 3 to 22 minutes between Earth and Mars, so nobody can drive for you, but <b>Mission Control</b> still sends storm warnings, flare alerts and tips. A flare can cause a <b>radio fault</b>: every Mission Control message turns to static.</p>
+        <div class="gives">
+          <div class="up"><b>Repair it</b>Go on an EVA and press <kbd>Shift</kbd>+<kbd>5</kbd> beside the rover for 4 seconds. Warnings come back.</div>
+          <div class="down"><b>Costs you</b>EVA time, 1.5× oxygen use, and a sandblasted suit if a storm is blowing.</div>
+        </div>
+        <p style="font-size:15px;color:#cdb8aa">Skipping the repair saves air now, but you'll drive blind into the next storm. Safe mode during flares makes radio faults much less likely in the first place.</p>
+      </div>
+    </div>
+
+    <div class="sys">
+      <div class="gif" style="--c:#a68cf0"><img src="gifs/mass-budget.jpg" data-gif="gifs/mass-budget.gif" alt="Animated clip: in the garage, choosing the fission reactor and water-jacket walls pushes the rover over the 2,300 kg limit until a lighter frame is chosen" width="780" height="455"><button class="play" aria-label="Play the mass budget clip"><span>▶ Play clip</span></button></div>
+      <div>
+        <span class="tag" style="background:#a68cf0">It all starts in the garage</span>
+        <h3>The mass budget ties them together</h3>
+        <p>The rover must launch under <b class="num">2,300 kg</b>. The heaviest choices are the power source and the shielding, so you can rarely have the best of both. A heavier rover also uses more power to drive.</p>
+        <table style="background:#ffffff0d;color:#f3e6dc;border-color:#ffffff22">
+          <tr><th style="background:#ffffff14">Power source</th><th style="background:#ffffff14">Mass</th><th style="background:#ffffff14">Good at</th></tr>
+          <tr><td>Big solar array (16 m²)</td><td>120 kg</td><td>Light, strong in sun; 28 kWh battery; useless at night and in dust</td></tr>
+          <tr><td>Big battery pack</td><td>260 kg</td><td>46 kWh stored; half the panels</td></tr>
+          <tr><td>Mini fission reactor</td><td>420 kg</td><td>~1 kW day and night, dust or not; only 22 kWh battery</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="planner">
+  <div class="wrap">
+    <h2>Trade-off planner</h2>
+    <p class="sub">Try a build before you play. These numbers use the same formulas as the game, simplified for a parked rover at midday.</p>
+    <div class="planner">
+      <div>
+        <div class="prow">
+          <div><label for="pFrame">Frame</label><select id="pFrame"></select></div>
+          <div><label for="pWheels">Wheels</label><select id="pWheels"></select></div>
+          <div><label for="pSusp">Suspension</label><select id="pSusp"></select></div>
+          <div><label for="pMotor">Motors</label><select id="pMotor"></select></div>
+          <div><label for="pPower">Power</label><select id="pPower"></select></div>
+          <div><label for="pHull">Shielding</label><select id="pHull"></select></div>
+        </div>
+        <div class="prow" style="margin-top:6px">
+          <div><label>Food crates (50 kg)</label><div class="counter" data-k="crates"><button aria-label="fewer crates">−</button><output>3</output><button aria-label="more crates">+</button></div></div>
+          <div><label>Oxygen tanks (14 kg)</label><div class="counter" data-k="o2"><button aria-label="fewer tanks">−</button><output>0</output><button aria-label="more tanks">+</button></div></div>
+          <div><label>Repair kits (8 kg)</label><div class="counter" data-k="kits"><button aria-label="fewer kits">−</button><output>1</output><button aria-label="more kits">+</button></div></div>
+          <div><label for="pDiff">Difficulty</label><select id="pDiff"><option value="200">Medium / Hard (200 kg rack)</option><option value="325">Easy (325 kg rack)</option></select></div>
+        </div>
+      </div>
+      <div>
+        <div class="meter"><div class="lab"><span>Rover launch mass</span><span id="oMass"></span></div><div class="bar"><i id="mMass"></i></div></div>
+        <div class="meter"><div class="lab"><span>Cargo rack</span><span id="oCargo"></span></div><div class="bar"><i id="mCargo"></i></div></div>
+        <div class="readout">
+          <div><b id="oAir"></b><span>hours of air for 2 people (drive takes ~2.5 h)</span></div>
+          <div><b id="oBatt"></b><span>battery</span></div>
+          <div><b id="oSun"></b><span>power at noon, clear sky</span></div>
+          <div><b id="oFood"></b><span>crew-days of food this trip (of 100)</span></div>
+          <div><b id="oRadOpen"></b><span>flare dose driving in the open</span></div>
+          <div><b id="oRadShel"></b><span>flare dose in shelter mode (F)</span></div>
+        </div>
+        <div class="verdict" id="oVerdict"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="hazards" class="alt">
+  <div class="wrap">
+    <h2>The route and its hazards</h2>
+    <p class="sub">The first drive to Bravo follows a script, so you can learn where the trouble is. Later trips get random storms and flares, more often on harder difficulties.</p>
+    <div class="route" aria-label="Route map from Base Alpha (0 km) to Base Bravo (24 km)">
+      <div class="strip">
+        <div style="width:1.7%;background:#8e3f22" title="Base Alpha"></div>
+        <div style="width:15%;background:#b5532a" title="Rocky plain"></div>
+        <div style="width:20.8%;background:#d29a5e" title="Dune field"></div>
+        <div style="width:20.8%;background:#7a3a22" title="Crater rim"></div>
+        <div style="width:12.5%;background:#4a3330" title="Lava tube"></div>
+        <div style="width:26.3%;background:#a9c6cf" title="Icy lowland"></div>
+        <div style="width:2.9%;background:#2a8f87" title="Base Bravo"></div>
+      </div>
+      <div class="marks">
+        <div class="mk" style="left:2%">0 km<br><b>Alpha</b></div>
+        <div class="mk low" style="left:16%">3.9 km<br>Dust storm warning</div>
+        <div class="mk" style="left:30%">6.6–13 km<br>Dust devil</div>
+        <div class="mk low" style="left:38.3%">9.2 km<br>Crater rim jump</div>
+        <div class="mk" style="left:47%">11.3 km<br>Solar flare</div>
+        <div class="mk low" style="left:60%">14–17 km<br>Lava tube</div>
+        <div class="mk" style="left:73.3%">17.6 km<br>2nd storm</div>
+        <div class="mk low" style="left:88.3%">21.2 km<br>Maybe a local storm</div>
+        <div class="mk" style="left:98%">24 km<br><b>Bravo</b></div>
+      </div>
+    </div>
+    <div class="cards3">
+      <div class="card"><h4>🌪️ Dust storms</h4><p>About 80 to 100 minutes of warning. Sand blasts the hull, piles drifts around a parked rover and coats the panels. <b>Build a shelter</b>: wall in both sides and add a roof (red glow = gaps, green = sealed), or hide in the lava tube. Double dust seals cut storm damage by about two thirds.</p></div>
+      <div class="card"><h4>☀️ Solar flares</h4><p>About 18 minutes of warning, then roughly 36 minutes of particles. Race for the lava tube if it's close, build a thick roof (ice counts double), or press <kbd>F</kbd> right away. Then repair any electronics faults on an EVA.</p></div>
+      <div class="card"><h4>🥶 Cold and night</h4><p>Mars averages about −60 °C. At sunset the panels stop and it gets much colder. Keep the cargo heater on, or pack the insulation blanket in case the heater breaks.</p></div>
+      <div class="card"><h4>🪨 Rocks and crests</h4><p>Sharp rocks punch holes in wheels: slow below 4 km/h. At only 38% of Earth's gravity, crests launch the rover. Hard landings crack food crates and loosen straps, so ease off before drops.</p></div>
+      <div class="card"><h4>🏜️ Sand and getting stuck</h4><p>Spinning wheels? Back up and take a run at it, or go on an EVA and dig a path. If you roll over, the crew winches you back: 10 minutes, 1 kWh and shaken cargo.</p></div>
+      <div class="card"><h4>☠️ Toxic dust</h4><p>If the hull drops below 50% during a storm, perchlorate dust leaks into the cargo and spoils food. Patch the hull with a repair kit on an EVA (<kbd>Shift</kbd>+<kbd>1</kbd>).</p></div>
+    </div>
+    <h3 style="margin-top:34px">Caves, crafting and a bigger rover</h3>
+    <div class="two">
+      <div>
+        <p>Look for <b>CAVE</b> signs with ladders going down. Deep underground you'll find rare <b>titanium ore</b>, <b>opal</b> and <b>meteorite iron</b>. Bring them to a base workshop to upgrade:</p>
+        <table>
+          <tr><th>Upgrade</th><th>Gives you</th><th>Needs</th></tr>
+          <tr><td>Cargo rack Mk II</td><td>325 kg (6 crates)</td><td>3 plates, 2 titanium</td></tr>
+          <tr><td>Cargo rack Mk III</td><td>450 kg (9 crates)</td><td>4 plates, 4 titanium, 2 meteorite</td></tr>
+          <tr><td>Long-bed rover, 4th axle</td><td>600 kg (12 crates)</td><td>6 plates, 3 titanium, 3 meteorite, 3 opal</td></tr>
+          <tr><td>Nickel-iron battery</td><td>+14 kWh</td><td>2 plates, 1 titanium</td></tr>
+          <tr><td>Solid-state battery</td><td>+30 kWh</td><td>3 plates, 2 meteorite, 2 opal</td></tr>
+        </table>
+      </div>
+      <div>
+        <p>The <b>fabricator</b> (<kbd>C</kbd>) turns what you dig into building blocks. Each recipe uses a little battery power:</p>
+        <table>
+          <tr><th>Make</th><th>From</th></tr>
+          <tr><td>2 bricks</td><td>3 regolith (sintered soil)</td></tr>
+          <tr><td>1 glass</td><td>2 sand (roofs that let sunlight through)</td></tr>
+          <tr><td>1 metal plate</td><td>2 iron ore</td></tr>
+          <tr><td>1 airlock door</td><td>2 plates + 1 glass (walk through, sand can't)</td></tr>
+          <tr><td>3 ladders</td><td>2 basalt</td></tr>
+          <tr><td>2 lamps</td><td>1 plate + 1 glass</td></tr>
+          <tr><td>1 outpost beacon</td><td>2 plates + 2 bricks + 1 lamp</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tips">
+  <div class="wrap">
+    <h2>Tips from the trainer</h2>
+    <div class="two">
+      <div>
+        <div class="tip"><b>Start balanced.</b> The default rover (composite frame, aluminum wheels, rocker-bogie, standard drive, big solar array) is 1,810 kg, which leaves room for water walls or seals.</div>
+        <div class="tip"><b>Do the oxygen maths at Base Alpha.</b> The planning check tells you how many hours of air you have. Aim for well over the 2.5-hour drive so a storm doesn't end your mission.</div>
+        <div class="tip"><b>Build early.</b> When the first storm warning comes at km 3.9, start your shelter immediately. You start with 8 bricks and 2 metal plates; dig for the rest.</div>
+        <div class="tip"><b>Use the lava tube.</b> Between km 14 and 17, rock overhead blocks almost all radiation and sand. Turn on the lights; the panels don't work inside.</div>
+      </div>
+      <div>
+        <div class="tip"><b>Don't leave food behind too long.</b> Alpha's freezers are failing: food there loses about 1% of its value every hour.</div>
+        <div class="tip"><b>Dust devils are your friend.</b> If one sweeps over the rover, it blows the solar panels clean, just like it did for Spirit and Opportunity.</div>
+        <div class="tip"><b>Re-strap the cargo</b> (<kbd>Shift</kbd>+<kbd>4</kbd>) after a rough patch. Loose straps make every bump worse for the crates.</div>
+        <div class="tip"><b>Fix faults fast.</b> A broken motor controller halves your top speed and a broken heater freezes the food. Electronics repairs don't need a kit.</div>
+      </div>
+    </div>
+    <h3 style="margin-top:30px">Difficulty levels</h3>
+    <table>
+      <tr><th>Level</th><th>What changes</th></tr>
+      <tr><td><b>Easy</b> (solo only)</td><td>All 4 crates fit in one trip (325 kg rack). Gentler storms and flares, softer landings, slower spoilage.</td></tr>
+      <tr><td><b>Medium</b></td><td>The real challenge: 200 kg rack, storms, flares and spoilage as in the mission briefing.</td></tr>
+      <tr><td><b>Hard</b></td><td>Bigger storms with less warning, stronger flares, rougher landings, faster spoilage.</td></tr>
+    </table>
+    <h3 style="margin-top:30px">Badges to collect</h3>
+    <div class="badges">
+      <div>🟢🟠🔴 <b>Mission complete</b>Deliver every crate on Easy, Medium or Hard.</div>
+      <div>🤝 <b>Team mission</b>Finish in multiplayer.</div>
+      <div>🥉🥈🥇 <b>Speed</b>Finish in under 12, 9 or 6 mission hours.</div>
+      <div>☢️ <b>Radiation Safe</b>Crew dose under 5 mSv.</div>
+      <div>🫁 <b>Fresh Air</b>Oxygen never below 25%.</div>
+      <div>🛡️ <b>Iron Hull</b>Hull never below 50%.</div>
+      <div>🧑‍🚀 <b>Spotless Suit</b>Suit never sandblasted.</div>
+      <div>🥫 <b>Food Guardian</b>Deliver 90% of the food.</div>
+      <div>🧱 <b>Master Builder</b>Ride out a storm in your own shelter.</div>
+      <div>⛏️ <b>Cave Explorer</b>Find 5 rare minerals.</div>
+      <div>🚙 <b>Rover Engineer</b>Build the long-bed rover.</div>
+      <div>☀️ <b>Space Weather Ready</b>Shelter from a solar flare.</div>
+      <div>🪂 <b>Seven Minutes of Terror</b>Perfect landing on Mars.</div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap two">
+    <figure><img class="shot" src="img/cruise.jpg" alt="The cruise to Mars mini-game: a spacecraft follows a dotted path between Earth and Mars while dodging micrometeoroids" loading="lazy" width="1200" height="700"><figcaption>The optional trip to Mars: stay on the path, dodge micrometeoroids, shelter from a flare.</figcaption></figure>
+    <div>
+      <h2>Real science inside</h2>
+      <p>The game runs on a snapshot of real numbers: Mars gravity (3.71 m/s²), sunlight (~590 W/m²), oxygen use (0.84 kg per person per day, NASA's Baseline Values and Assumptions Document), surface radiation (~0.67 mSv per day measured by Curiosity's RAD), real flares like the X9.0 flare of October 3, 2024, and the 2018 planet-wide dust storm that ended Opportunity's mission.</p>
+      <p>Press <b>Mars data</b> in the game at any time to read the sources. Numbers are simplified for learning; it is not a mission-planning tool.</p>
+      <a class="btn" href="https://juniorastronautmissiontrainer-three.vercel.app/" target="_blank" rel="noopener">▶ Start your mission</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Unofficial player's guide to <b>Supply Run to Bravo</b>, a Junior Astronaut Mission Trainer made by The Royal Beauties for the <a href="https://www.spaceappschallenge.org/2026/challenges/junior-astronaut-mission-trainer/" target="_blank" rel="noopener">NASA Space Apps Challenge 2026</a>. Game source: <a href="https://github.com/swingingmonkeys/juniorastronautmissiontrainer" target="_blank" rel="noopener">github.com/swingingmonkeys/juniorastronautmissiontrainer</a>. Clips and screenshots were recorded from the game. Not produced or endorsed by NASA.</p>
+  </div>
+</footer>
+
+<script>
+// play GIFs on click (posters keep the page light)
+document.querySelectorAll('.gif').forEach(g=>{
+  const img=g.querySelector('img'), btn=g.querySelector('button.play');
+  btn.addEventListener('click',()=>{ img.src=img.dataset.gif; g.classList.add('playing'); });
+  img.addEventListener('click',()=>{ if(g.classList.contains('playing')){ const s=img.dataset.gif; img.src=''; img.src=s; } });
+});
+// control tabs
+const shots={'t-drive':['img/drive.jpg','The trip bar (top left) shows where you are on the 24 km route. Gauges on the right show oxygen, battery, hull, wheels, electronics, solar panels, radiation and cargo. Messages appear bottom left.'],
+  't-eva':['img/eva.jpg','On an EVA the astronaut walks beside the rover. Repair jobs pop up as buttons when you stand close enough.'],
+  't-fly':['img/launch.jpg','Launch: drop each stage when its fuel bar reaches the green zone to save fuel for the cruise.']};
+document.querySelectorAll('[role=tab]').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('[role=tab]').forEach(x=>{ const on=x===t; x.setAttribute('aria-selected',on); document.getElementById(x.getAttribute('aria-controls')).hidden=!on; });
+  const s=shots[t.getAttribute('aria-controls')]; document.getElementById('ctrlImg').src=s[0]; document.getElementById('ctrlCap').textContent=s[1];
+}));
+// planner (part data copied from the game)
+const PARTS={
+ pFrame:{light:['Aluminum frame',250],std:['Composite frame',400],armor:['Titanium armor',650]},
+ pWheels:{alu:['Aluminum cleated wheels',120],mesh:['Wire-mesh wheels',70],spring:['Shape-memory spring tires',180]},
+ pSusp:{rocker:['Rocker-bogie',150],springs:['Long-travel springs',110],damper:['Heavy dampers',170]},
+ pMotor:{eco:['Efficient hub motors',90],bal:['Standard drive',120],torque:['High-torque motors',170],sport:['Racing motors',150]},
+ pPower:{solar:['Big solar array',120,{area:16,batt:28,react:0}],battery:['Big battery pack',260,{area:8,batt:46,react:0}],reactor:['Mini fission reactor',420,{area:4,batt:22,react:1}]},
+ pHull:{basic:['Standard hull',0,{rad:1,dust:1}],water:['Water-jacket walls',200,{rad:.45,dust:1}],seals:['Double dust seals',60,{rad:1,dust:.35}]}};
+const DEF={pFrame:'std',pWheels:'alu',pSusp:'rocker',pMotor:'bal',pPower:'solar',pHull:'basic'};
+for(const id in PARTS){ const s=document.getElementById(id); for(const k in PARTS[id]){ const o=document.createElement('option'); o.value=k; o.textContent=`${PARTS[id][k][0]} (${PARTS[id][k][1]} kg)`; if(k===DEF[id]) o.selected=true; s.appendChild(o);} s.addEventListener('change',calc); }
+document.getElementById('pDiff').addEventListener('change',calc);
+const st={crates:3,o2:0,kits:1}, MAX={crates:4,o2:4,kits:4};
+document.querySelectorAll('.counter').forEach(c=>{ const k=c.dataset.k, [m,p]=c.querySelectorAll('button');
+  m.onclick=()=>{ st[k]=Math.max(0,st[k]-1); calc(); }; p.onclick=()=>{ st[k]=Math.min(MAX[k],st[k]+1); calc(); }; });
+const val=id=>PARTS[id][document.getElementById(id).value];
+function calc(){
+  document.querySelectorAll('.counter').forEach(c=>c.querySelector('output').textContent=st[c.dataset.k]);
+  const mass=900+Object.keys(PARTS).reduce((s,id)=>s+val(id)[1],0), cap=+document.getElementById('pDiff').value;
+  const cargo=st.crates*50+st.o2*14+st.kits*8, P=val('pPower')[2], H=val('pHull')[2];
+  const air=(.25+.35*st.o2)/(0.84*2/24), sun=P.area*.22*.59+P.react;
+  const open=14*(H.rad<1?.75:1)+.028, shel=14*.5*H.rad+.028;
+  const set=(id,t)=>document.getElementById(id).textContent=t;
+  set('oMass',`${mass.toLocaleString()} / 2,300 kg`); set('oCargo',`${cargo} / ${cap} kg`);
+  const mm=document.getElementById('mMass'), mc=document.getElementById('mCargo');
+  mm.style.width=Math.min(100,mass/2300*100)+'%'; mm.classList.toggle('over',mass>2300);
+  mc.style.width=Math.min(100,cargo/cap*100)+'%'; mc.classList.toggle('over',cargo>cap);
+  set('oAir',air.toFixed(1)+' h'); set('oBatt',P.batt+' kWh'); set('oSun',sun.toFixed(1)+' kW'+(P.react?' (+night)':''));
+  set('oFood',st.crates*25); set('oRadOpen',open.toFixed(1)+' mSv/h'); set('oRadShel',shel.toFixed(1)+' mSv/h');
+  let v;
+  if(mass>2300) v=`Too heavy to launch: ${mass-2300} kg over. Swap a part for a lighter one.`;
+  else if(cargo>cap) v=`Cargo is ${cargo-cap} kg over the rack. Drop a crate or some supplies.`;
+  else if(air<3) v='Very little air for a 2.5-hour drive. One storm or EVA could end the mission.';
+  else if(air<5) v='Tight on air. Fine if nothing goes wrong, risky if a storm hits.';
+  else if(st.crates<2) v=`Lots of safety margin, but only ${st.crates*25} crew-days per trip. You'll need many trips.`;
+  else v=`Ready to roll: ${st.crates} crates, ${air.toFixed(1)} h of air, ${(2300-mass)} kg of launch margin.`;
+  set('oVerdict',v);
+}
+calc();
+</script>
+</body>
+</html>
