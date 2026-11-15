@@ -84,6 +84,7 @@ kbd{font-family:var(--pixel);font-size:11px;opacity:.7;margin-left:3px}
 #topbtns{position:absolute;left:calc(460px + env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;gap:6px}
 #overlay{position:fixed;inset:0;background:rgba(20,10,6,.62);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
 #overlay[hidden]{display:none}
+#overlay.menu{background:rgba(6,2,10,.28)}
 #card{width:min(640px,100%);max-height:calc(100% - 20px);overflow:auto;padding:20px 22px;background:var(--panel);border:3px solid var(--line);border-radius:10px;color:var(--text)}
 #card h1{font-family:var(--pixel);font-weight:700;font-size:clamp(30px,6vw,46px);line-height:1;margin:0 0 6px;color:var(--rust)}
 #card h2{font-family:var(--pixel);font-weight:700;font-size:26px;margin:0 0 6px}
@@ -138,6 +139,18 @@ body.hide-gauges #side{display:none}
 #jctl{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);display:flex;justify-content:center;gap:6px;flex-wrap:wrap;padding:0 8px;z-index:4}
 #jctl[hidden]{display:none}
 #jctl button{min-height:48px;min-width:56px;font-weight:700}
+#card .srow{align-items:center}
+#card .vol{display:flex;align-items:center;gap:6px;font-size:15px}
+#card .vol input{width:120px}
+#card ul.songs{list-style:none;padding:0;margin:8px 0;max-height:260px;overflow:auto;border:2px solid var(--line);border-radius:8px}
+#card ul.songs li{display:flex;gap:6px;border-bottom:1px solid var(--line)}
+#card ul.songs .song{flex:1;text-align:left;border:0;border-radius:0;background:transparent;padding:9px 12px;font-size:15px}
+#card ul.songs .song span{color:var(--rust);margin-right:6px}
+#card ul.songs .song small{color:var(--muted);margin-left:6px}
+#card ul.songs .song.on{background:var(--btn-on);color:var(--btn-on-text)} #card ul.songs .song.on small,#card ul.songs .song.on span{color:#fff}
+#card ul.songs .rm{border:0;background:transparent;color:var(--danger);font-size:13px}
+#card .addsong span{display:inline-block;padding:10px 14px;border:2px dashed var(--rust);border-radius:8px;cursor:pointer;font-weight:700;margin-top:6px}
+#card .hint{font-size:13.5px;color:var(--muted);margin:6px 0}
 #card.wide{width:min(900px,100%)}
 #card .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
 #card .opt{text-align:left;padding:9px 11px;font-size:15px}
@@ -208,7 +221,7 @@ body.hide-gauges #side{display:none}
     <button id="bData" title="Real Mars data used in this game">Mars data</button>
     <button id="bHelp" title="Controls">Help</button>
     <button id="bGauges" title="Show or hide gauges">Gauges</button>
-    <button id="bMusic" title="Music on or off (M)">Music</button>
+    <button id="bMusic" title="Settings: music, full screen, LDM">Settings</button>
     <button id="bOnline" hidden>Online: 1</button>
   </div>
 
@@ -239,7 +252,7 @@ body.hide-gauges #side{display:none}
       <div id="crates"></div>
       <dl class="kv">
         <dt>On board</dt><dd id="cDays">0 crates</dd>
-        <dt>Left at Base Alpha</dt><dd id="cAlpha">20 crates</dd>
+        <dt>Left at Base Alpha</dt><dd id="cAlpha">4 crates</dd>
         <dt>Delivered to Bravo (crew-days)</dt><dd id="cBravo">0</dd>
         <dt>Cargo bay temperature</dt><dd id="cTemp">5 °C</dd>
         <dt>Cargo straps</dt><dd id="cStrap">100%</dd>
@@ -300,6 +313,7 @@ const getT=(x,y)=>(x<0||x>=W||y>=H)?T.BED:(y<0?T.AIR:tiles[y*W+x]);
 const setT=(x,y,t)=>{if(x>=0&&x<W&&y>=0&&y<H)tiles[y*W+x]=t;};
 const solidAt=(x,y)=>{ const t=getT(x,y); return t!==T.AIR&&t!==T.LADDER; };
 const G_caves=[];
+const ORIG={t:null,b:null};   // the world as generated, before anyone digs or builds
 
 function gen(seed){
   const R=rng(seed);
@@ -552,26 +566,115 @@ function garageCard(next,back){
   });
 }
 
-/* ============ CHIPTUNE MUSIC (Web Audio, generated live) ============ */
+/* ============ MUSIC: KEYGEN CLASSICS (generated live) + YOUR OWN PLAYLIST ============
+   Every keygen track is original and generated in the browser with the Web Audio API:
+   a chord progression, a seeded melody, fast arpeggios, a bass line, drums and echo.
+   The "Henhen :)" playlist plays songs the player adds from their own device; they
+   stay on that device (saved in the browser) and are never uploaded. */
+const SET=(()=>{ let s={}; try{ s=JSON.parse(localStorage.getItem('msr_settings')||'{}')||{}; }catch(_){}
+  return Object.assign({vol:.7,song:0,list:'keygen',src:'synth',shuffle:false,ldm:false,crush:false},s); })();
+function saveSettings(){ try{ localStorage.setItem('msr_settings',JSON.stringify(SET)); }catch(_){} }
+const SONGS=[
+  {name:'Crack the Crater',     bpm:136,root:57,mode:'minor',prog:[0,5,2,6],lead:'square',  arp:'up',    bass:'oct',  drums:'four', seed:11},
+  {name:'Phobos Patch v2.1',    bpm:144,root:62,mode:'minor',prog:[0,3,6,4],lead:'square',  arp:'updown',bass:'pulse',drums:'break',seed:23},
+  {name:'Regolith Rush',        bpm:150,root:60,mode:'major',prog:[0,4,5,3],lead:'sawtooth',arp:'oct',   bass:'oct',  drums:'four', seed:37},
+  {name:'Dust Devil Dance',     bpm:128,root:55,mode:'minor',prog:[0,6,5,4],lead:'square',  arp:'trill', bass:'walk', drums:'four', seed:41},
+  {name:'Olympus Uplink',       bpm:132,root:64,mode:'minor',prog:[0,2,5,4],lead:'triangle',arp:'up',    bass:'pulse',drums:'half', seed:53},
+  {name:'Red Planet Serial',    bpm:140,root:58,mode:'minor',prog:[0,5,3,4],lead:'square',  arp:'oct',   bass:'oct',  drums:'break',seed:67},
+  {name:'Sol 404',              bpm:120,root:53,mode:'major',prog:[0,5,3,4],lead:'square',  arp:'updown',bass:'walk', drums:'half', seed:71},
+  {name:'Keygen Kepler',        bpm:148,root:61,mode:'minor',prog:[5,6,0,0],lead:'sawtooth',arp:'up',    bass:'pulse',drums:'four', seed:83},
+  {name:'Airlock Arpeggio',     bpm:138,root:59,mode:'major',prog:[0,3,0,4],lead:'square',  arp:'trill', bass:'oct',  drums:'four', seed:97},
+  {name:'Perchlorate Party',    bpm:156,root:56,mode:'minor',prog:[0,6,3,5],lead:'square',  arp:'oct',   bass:'pulse',drums:'break',seed:101},
+  {name:'Seven Minutes of Synth',bpm:124,root:62,mode:'minor',prog:[0,4,5,2],lead:'triangle',arp:'updown',bass:'walk',drums:'half', seed:113},
+  {name:'Bravo Base Boogie',    bpm:146,root:65,mode:'major',prog:[0,5,1,4],lead:'square',  arp:'up',    bass:'oct',  drums:'four', seed:127},
+  {name:'Ilmenite Inject',      bpm:152,root:57,mode:'minor',prog:[0,2,6,4],lead:'sawtooth',arp:'oct',   bass:'pulse',drums:'break',seed:131},
+  {name:'Opal Overdrive',       bpm:160,root:60,mode:'minor',prog:[0,5,6,4],lead:'square',  arp:'up',    bass:'oct',  drums:'four', seed:139},
+  {name:'Meteorite Mixtape',    bpm:134,root:63,mode:'major',prog:[0,3,4,4],lead:'square',  arp:'trill', bass:'walk', drums:'half', seed:149},
+  {name:'Lava Tube Loader',     bpm:126,root:52,mode:'minor',prog:[0,6,5,6],lead:'triangle',arp:'updown',bass:'pulse',drums:'half', seed:151},
+  {name:'Rocker-Bogie Remix',   bpm:142,root:59,mode:'minor',prog:[0,3,5,4],lead:'square',  arp:'oct',   bass:'oct',  drums:'break',seed:163},
+  {name:'Kilopower Cracktro',   bpm:158,root:62,mode:'major',prog:[0,4,1,5],lead:'sawtooth',arp:'up',    bass:'pulse',drums:'four', seed:173},
+  {name:'Solar Flare Serial',   bpm:148,root:54,mode:'minor',prog:[0,5,2,4],lead:'square',  arp:'updown',bass:'oct',  drums:'four', seed:181},
+  {name:'Water Wall Waltz',     bpm:118,root:60,mode:'major',prog:[0,5,3,4],lead:'triangle',arp:'trill', bass:'walk', drums:'half', seed:191},
+  {name:'Sandstorm Setup.exe',  bpm:154,root:58,mode:'minor',prog:[0,6,4,5],lead:'square',  arp:'oct',   bass:'pulse',drums:'break',seed:197},
+  {name:'Hematite Hack',        bpm:140,root:56,mode:'minor',prog:[0,4,6,3],lead:'sawtooth',arp:'up',    bass:'oct',  drums:'four', seed:211},
+  {name:'Airlock Override',     bpm:136,root:65,mode:'minor',prog:[0,2,3,4],lead:'square',  arp:'updown',bass:'walk', drums:'four', seed:223},
+  {name:'Last Crate Home',      bpm:130,root:57,mode:'major',prog:[0,4,5,3],lead:'square',  arp:'oct',   bass:'oct',  drums:'half', seed:227},
+  // "Dash Mode": fast, bouncy, original tracks with a rhythm-game feel
+  {name:'Jump Pad Jam',         bpm:170,root:60,mode:'minor',prog:[0,5,6,4],lead:'sawtooth',arp:'oct',   bass:'roll', drums:'dash', seed:301,dash:true},
+  {name:'Spike Runner',         bpm:176,root:62,mode:'minor',prog:[0,6,5,4],lead:'square',  arp:'up',    bass:'roll', drums:'dash', seed:313,dash:true},
+  {name:'Gravity Flip',         bpm:165,root:57,mode:'minor',prog:[0,3,6,5],lead:'sawtooth',arp:'updown',bass:'roll', drums:'dash', seed:331,dash:true},
+  {name:'Orb Hopper',           bpm:172,root:64,mode:'major',prog:[0,4,5,3],lead:'square',  arp:'trill', bass:'roll', drums:'dash', seed:347,dash:true},
+  {name:'Wave Mode',            bpm:180,root:59,mode:'minor',prog:[0,5,3,6],lead:'sawtooth',arp:'oct',   bass:'roll', drums:'dash', seed:359,dash:true},
+  {name:'Practice Checkpoint',  bpm:160,root:65,mode:'major',prog:[0,5,3,4],lead:'square',  arp:'updown',bass:'roll', drums:'dash', seed:367,dash:true},
+  {name:'Demon Dust Drop',      bpm:174,root:55,mode:'minor',prog:[0,6,4,5],lead:'sawtooth',arp:'up',    bass:'roll', drums:'dash', seed:383,dash:true},
+  {name:'Hundred Percent',      bpm:168,root:61,mode:'minor',prog:[5,6,0,0],lead:'square',  arp:'oct',   bass:'roll', drums:'dash', seed:397,dash:true},
+];
+// Public-domain pieces from the Henhen :) list, arranged as chiptune. [note (MIDI), length in 16th notes]
+SONGS.push(
+  {name:'Für Elise (Beethoven)',henhen:true,fixed:true,bpm:115,lead:'square',style:'arp',drums:false,
+   mel:[[76,1],[75,1], [76,1],[75,1],[76,1],[71,1],[74,1],[72,1], [69,2],[null,1],[60,1],[64,1],[69,1], [71,2],[null,1],[64,1],[68,1],[71,1],
+        [72,2],[null,1],[64,1],[76,1],[75,1], [76,1],[75,1],[76,1],[71,1],[74,1],[72,1], [69,2],[null,1],[60,1],[64,1],[69,1], [71,2],[null,1],[64,1],[72,1],[71,1], [69,4]],
+   bass:[[null,8],[45,6],[40,6],[45,6],[null,6],[45,6],[40,6],[45,4]]},
+  {name:'Can-Can (Offenbach)',henhen:true,fixed:true,bpm:150,lead:'square',style:'oompah',drums:true,
+   mel:[[72,8], [74,2],[77,2],[76,2],[74,2], [79,4],[79,4], [79,2],[81,2],[76,2],[77,2], [74,4],[74,4], [74,2],[77,2],[76,2],[74,2], [72,2],[84,2],[83,2],[81,2], [79,2],[77,2],[76,2],[74,2],
+        [72,8], [74,2],[77,2],[76,2],[74,2], [79,4],[79,4], [79,2],[81,2],[76,2],[77,2], [74,4],[74,4], [74,2],[77,2],[76,2],[74,2], [72,2],[84,2],[79,2],[76,2], [72,4],[null,4]],
+   bass:[[48,8],[43,8],[48,8],[48,8],[43,8],[43,8],[48,8],[43,8], [48,8],[43,8],[48,8],[48,8],[43,8],[43,8],[48,8],[48,8]]},
+  // Traditional New Zealand sea shanty (around 1860), melody only
+  {name:'Wellerman (traditional shanty)',henhen:true,fixed:true,bpm:104,lead:'square',style:'oompah',drums:true,
+   mel:[[64,4], [69,4],[69,2],[69,2],[69,4],[72,4], [76,4],[76,4],[76,6],[76,2], [77,4],[74,2],[74,2],[74,4],[74,2],[77,2], [81,2],[81,2],[76,4],[76,6],[76,2],
+        [69,4],[69,4],[69,4],[72,4], [76,4],[76,4],[76,4],[76,4], [76,4],[74,4],[72,2],[72,2],[71,4], [69,16],
+        [81,8],[81,6],[77,2], [79,2],[79,2],[76,4],[76,6],[76,2], [77,4],[74,4],[74,2],[76,2],[77,4], [81,4],[76,4],[76,8],
+        [81,8],[81,4],[77,2],[77,2], [79,2],[79,2],[76,4],[76,4],[76,4], [76,4],[74,4],[72,4],[71,4], [69,12]],
+   bass:[[null,4],[45,16],[45,16],[50,16],[45,16],[45,16],[45,16],[40,16],[45,16], [41,16],[48,16],[50,16],[45,16],[41,16],[48,16],[40,16],[45,12]]},
+);
+const SCALES={minor:[0,2,3,5,7,8,10],major:[0,2,4,5,7,9,11]};
+function compileSong(S){
+  if(S.fixed){
+    const melMap={}, bassAt=[]; let st=0;
+    for(const [n,l] of S.mel){ if(n!=null) melMap[st]=[n,l]; st+=l; }
+    const L=st; st=0;
+    for(const [n,l] of S.bass){ for(let k=0;k<l;k++) bassAt[st+k]=n==null?null:{root:n,k}; st+=l; }
+    return {...S,L,melMap,bassAt};
+  }
+  const sc=SCALES[S.mode];
+  const deg=d=>S.root+sc[((d%7)+7)%7]+12*Math.floor(d/7);
+  const chords=S.prog.map(d=>[deg(d),deg(d+2),deg(d+4)]);
+  const R=rng(S.seed);
+  const RHY=[[3,1,2,2,2,2,4],[2,2,2,2,2,2,2,2],[4,2,2,3,1,4],[1,1,2,2,2,4,4],[2,1,1,2,2,4,2,2],[3,3,2,2,2,4]];
+  const scaleNotes=[]; for(let o=1;o<4;o++) for(const i of sc) scaleNotes.push(S.root+12*o+i);
+  const inRange=scaleNotes.filter(n=>n>=S.root+12&&n<=S.root+31);
+  function melody(seedShift){
+    const r=rng(S.seed+seedShift), m={}; let prev=inRange[Math.floor(inRange.length/2)];
+    for(let bar=0;bar<4;bar++){
+      const rhy=RHY[Math.floor(r()*RHY.length)], ct=chords[bar].map(n=>{ let x=n; while(x<S.root+12) x+=12; return x; });
+      let step=bar*16;
+      rhy.forEach((len,k)=>{
+        let note;
+        if(k===0||r()<.45){ note=ct.reduce((a,b)=>Math.abs(b-prev)<Math.abs(a-prev)?b:a); if(r()<.3) note+=12*(r()<.5?1:-1); }
+        else { const idx=inRange.indexOf(inRange.reduce((a,b)=>Math.abs(b-prev)<Math.abs(a-prev)?b:a)); note=inRange[clamp(idx+(r()<.5?1:-1)*(r()<.7?1:2),0,inRange.length-1)]; }
+        note=clamp(note,S.root+10,S.root+34);
+        if(r()>.12) m[step]=[note,len]; prev=note; step+=len;
+      });
+    }
+    return m;
+  }
+  R();
+  return {...S,chords,A:melody(1),B:melody(2)};
+}
+const SONGC=SONGS.map(compileSong);
+const groupOf=S=>S.henhen?'henhen':S.dash?'dash':'keygen';
+const GROUPS={keygen:[],dash:[],henhen:[]}; SONGS.forEach((S,i)=>GROUPS[groupOf(S)].push(i));
+const KEYGEN_IDX=GROUPS.keygen, HENHEN_IDX=GROUPS.henhen, DASH_IDX=GROUPS.dash;
 const Music=(()=>{
-  let ac=null,master,delay,noiseBuf,on=false,timer=null,step=0,nextT=0,loop=0,want=true;
+  let ac=null,master,delay,noiseBuf,on=false,timer=null,step=0,nextT=0,loop=0,want=true,cur=clamp(SET.song|0,0,SONGS.length-1);
+  let aud=null, userList=[], userIdx=0;
   try{ want=localStorage.getItem('msr_music')!=='off'; }catch(_){}
-  const BPM=136, SPB=60/BPM/4;
   const mtof=m=>440*Math.pow(2,(m-69)/12);
-  const CH=[[57,60,64],[53,57,60],[48,52,55],[55,59,62]];          // Am  F  C  G
-  const CH2=[[50,53,57],[53,57,60],[52,55,59],[57,60,64]];         // Dm  F  Em  Am
-  const LEAD=[[0,81,3],[3,76,1],[4,81,2],[6,84,2],[8,83,2],[10,81,2],[12,79,4],
-    [16,77,3],[19,81,1],[20,84,2],[22,81,2],[24,79,2],[26,77,2],[28,76,4],
-    [32,76,3],[35,79,1],[36,84,2],[38,83,2],[40,84,2],[42,86,2],[44,88,4],
-    [48,86,2],[50,83,2],[52,79,2],[54,83,2],[56,86,4],[60,83,2],[62,79,2]];
-  const LEAD2=[[0,86,2],[2,84,2],[4,81,4],[8,77,2],[10,81,2],[12,84,4],[16,84,2],[18,81,2],[20,77,4],[24,81,2],[26,84,2],[28,89,4],
-    [32,88,2],[34,86,2],[36,83,4],[40,79,2],[42,83,2],[44,86,4],[48,88,3],[51,84,1],[52,81,4],[56,88,2],[58,86,2],[60,84,2],[62,83,2]];
-  const toMap=a=>{const m={};a.forEach(([s,n,l])=>m[s]=[n,l]);return m;};
-  const LM=toMap(LEAD), LM2=toMap(LEAD2);
+  const spb=()=>60/SONGC[cur].bpm/4;
   function init(){
     ac=new (window.AudioContext||window.webkitAudioContext)();
-    master=ac.createGain(); master.gain.value=.14;
-    delay=ac.createDelay(1); delay.delayTime.value=SPB*3;
+    master=ac.createGain(); master.gain.value=.2*SET.vol;
+    delay=ac.createDelay(1); delay.delayTime.value=spb()*3;
     const fb=ac.createGain(); fb.gain.value=.33; const wet=ac.createGain(); wet.gain.value=.3;
     delay.connect(fb); fb.connect(delay); delay.connect(wet); wet.connect(master); master.connect(ac.destination);
     noiseBuf=ac.createBuffer(1,ac.sampleRate,ac.sampleRate); const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
@@ -587,25 +690,161 @@ const Music=(()=>{
     const g=ac.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0005,t+dur);
     s.connect(f); f.connect(g); g.connect(master); s.start(t,Math.random()*.5); s.stop(t+dur+.02);
   }
-  function play(s,t){
-    const bar=Math.floor(s/16), st=s%16, part=loop%4, ch=(part===2?CH2:CH)[bar];
-    if(st%4===0) tone('sine',160,t,.2,.95,false,42);
-    if(part>0&&(st===4||st===12)) hiss(t,.13,.4,1400);
-    if(st%4===2) hiss(t,.04,.2,7000);
-    if(st%2===0) tone('triangle',mtof(ch[0]-12+(st%4===2?12:0)),t,SPB*1.7,.5,false);
-    const arp=[ch[0],ch[1],ch[2],ch[0]+12][st%4]+12;
-    tone('square',mtof(arp),t,SPB*.85,.05,true);
-    if(part>0){ const L=(part===2?LM2:LM)[s]; if(L){ tone('square',mtof(L[0]),t,SPB*L[1]*.95,.09,true); tone('square',mtof(L[0])*1.007,t,SPB*L[1]*.95,.04,false); } }
+  function playFixed(S,s,t){
+    const SP=spb(), L=S.melMap[s], b=S.bassAt[s];
+    if(L){ tone(S.lead,mtof(L[0]),t,SP*L[1]*.95,.09,true); tone(S.lead,mtof(L[0])*1.006,t,SP*L[1]*.95,.03,false); }
+    if(b){
+      if(S.style==='arp'){ if(b.k<3) tone('triangle',mtof(b.root+[0,7,12][b.k]),t,SP*2.5,.45,false); }
+      else { const k=b.k%4; if(k===0) tone('triangle',mtof(b.root),t,SP*1.6,.5,false); if(k===2){ tone('square',mtof(b.root+12),t,SP*.9,.04,false); tone('square',mtof(b.root+19),t,SP*.9,.03,false); } }
+    }
+    if(S.drums){ if(s%8===0) tone('sine',150,t,.18,.8,false,42); if(s%8===4) hiss(t,.1,.3,1500); if(s%2===1) hiss(t,.03,.12,7000); }
   }
-  function sched(){ while(nextT<ac.currentTime+.12){ play(step,nextT); nextT+=SPB; if(++step>=64){ step=0; loop++; } } }
-  function start(){ if(!want) return; try{ if(!ac) init(); if(ac.state==='suspended') ac.resume(); }catch(_){ return; } if(on) return; on=true; step=0; nextT=ac.currentTime+.06; timer=setInterval(sched,25); }
-  function stop(){ on=false; clearInterval(timer); }
+  function play(s,t){
+    if(SONGC[cur].fixed) return playFixed(SONGC[cur],s,t);
+    const S=SONGC[cur], SP=spb(), bar=Math.floor(s/16), st=s%16, part=loop%4, ch=S.chords[bar];
+    // drums
+    if(S.drums==='dash'){ if(st%4===0) tone('sine',170,t,.2,1,false,40); if(st===4||st===12) hiss(t,.14,.45,1300); if(st%4===2) hiss(t,.09,.22,5000); else if(st%2===1) hiss(t,.03,.12,8000);
+      if(bar===3&&st>=12) hiss(t,.06,.18+(st-12)*.06,1800); if(bar===3&&part%2===1) tone('sawtooth',mtof(ch[0]+12+st),t,SP*.9,.025,false); }
+    else {
+    const kick=S.drums==='break'?[0,6,8,10].includes(st):S.drums==='half'?(st===0||st===8):st%4===0;
+    if(kick) tone('sine',160,t,.2,.95,false,42);
+    if(part>0&&(S.drums==='half'?st===8:(st===4||st===12))) hiss(t,.13,.4,1400);
+    if(S.drums==='break'?st%2===1:st%4===2) hiss(t,.035,.16,7000);
+    }
+    // bass
+    if(S.bass==='roll') tone('sawtooth',mtof(ch[0]-24+(st%2?12:0)),t,SP*.85,st%4===0?.11:.08,false);
+    else if(S.bass==='pulse') tone('square',mtof(ch[0]-24),t,SP*.8,.16,false);
+    else if(S.bass==='walk'){ if(st%4===0) tone('triangle',mtof([ch[0],ch[1],ch[2],ch[1]][st/4]-12),t,SP*3.5,.5,false); }
+    else if(st%2===0) tone('triangle',mtof(ch[0]-12+(st%4===2?12:0)),t,SP*1.7,.5,false);
+    // arpeggio
+    const pat={up:[0,1,2,3],updown:[0,1,2,1],oct:[0,3,1,3],trill:[0,2,0,2]}[S.arp]||[0,1,2,3];
+    const n=pat[st%4]===3?ch[0]+12:ch[pat[st%4]];
+    tone('square',mtof(n+12),t,SP*.85,.05,true);
+    // lead
+    if(part>0){ const L=(part===2?S.B:S.A)[s]; if(L){ tone(S.lead,mtof(L[0]),t,SP*L[1]*.95,S.lead==='triangle'?.16:.085,true); tone(S.lead,mtof(L[0])*1.007,t,SP*L[1]*.95,.035,false); } }
+  }
+  function sched(){ while(nextT<ac.currentTime+.12){ play(step,nextT); nextT+=spb(); if(++step>=(SONGC[cur].fixed?SONGC[cur].L:64)){ step=0; loop++; if(loop%8===0&&SET.shuffle&&!SONGS[cur].henhen){ const g=GROUPS[groupOf(SONGS[cur])]; pickSong(g[Math.floor(Math.random()*g.length)],true); } } } }
+  function startSynth(){ try{ if(!ac) init(); if(ac.state==='suspended') ac.resume(); }catch(_){ return; } if(on) return; on=true; step=0; loop=0; nextT=ac.currentTime+.06; delay.delayTime.value=spb()*3; timer=setInterval(sched,25); }
+  function stopSynth(){ on=false; clearInterval(timer); }
+  function stopAud(){ if(aud){ try{ aud.pause(); }catch(_){} } }
+  function pickSong(i,keep){ cur=clamp(i|0,0,SONGS.length-1); SET.song=cur; saveSettings(); if(ac&&delay) delay.delayTime.value=spb()*3; if(!keep){ step=0; loop=1; } }
+  // 8-bit filter for the player's own songs: crunch the sound down to a few levels and muffle the top end, like an old console
+  let srcNode=null, crushIn=null;
+  function routeUser(){
+    if(!aud) return;
+    try{
+      if(!ac) init(); if(ac.state==='suspended') ac.resume();
+      if(!srcNode){
+        srcNode=ac.createMediaElementSource(aud);
+        const steps=16, curve=new Float32Array(2048); for(let i=0;i<curve.length;i++){ const x=i/(curve.length-1)*2-1; curve[i]=Math.round(x*steps/2)/(steps/2); }
+        const shaper=ac.createWaveShaper(); shaper.curve=curve;
+        const lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3200;
+        const hp=ac.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=180;
+        const g=ac.createGain(); g.gain.value=.8;
+        shaper.connect(hp); hp.connect(lp); lp.connect(g); g.connect(ac.destination); crushIn=shaper;
+      }
+      srcNode.disconnect(); srcNode.connect(SET.crush?crushIn:ac.destination);
+    }catch(_){ /* if the browser won't route the file through Web Audio, it just plays normally */ }
+  }
+  async function playUser(i){
+    if(!userList.length){ stopAud(); return false; }
+    userIdx=((i%userList.length)+userList.length)%userList.length;
+    const tr=userList[userIdx];
+    if(!aud){ aud=new Audio(); aud.addEventListener('ended',()=>{ if(SET.list==='henhen'&&want) Music.next(); }); }
+    try{ if(aud.dataset.url) URL.revokeObjectURL(aud.dataset.url); const url=URL.createObjectURL(tr.blob); aud.dataset.url=url; aud.src=url; aud.volume=SET.vol; routeUser(); await aud.play(); return true; }
+    catch(e){ Music.lastErr='This browser blocked playing that file here. Try the Vercel version of the game, or a different file type (MP3 works best).'; return false; }
+  }
+  function start(){ if(!want) return; if(SET.src==='file'&&userList.length){ stopSynth(); playUser(userIdx); } else { stopAud(); startSynth(); } }
+  function stop(){ stopSynth(); stopAud(); }
   return {
-    start, stop, get on(){return want;},
+    start, stop, get on(){return want;}, get cur(){return cur;}, get userIdx(){return userIdx;}, lastErr:'',
+    get userList(){return userList;}, set userList(v){ userList=v; },
     toggle(){ want=!want; try{ localStorage.setItem('msr_music',want?'on':'off'); }catch(_){} if(want) start(); else stop(); return want; },
-    blip(){ if(!ac||!want) return; tone('square',1320,ac.currentTime,.06,.06,false,1760); },
+    setOn(v){ if(v!==want) this.toggle(); },
+    setCrush(v){ SET.crush=!!v; saveSettings(); if(srcNode) routeUser(); },
+    setVolume(v){ SET.vol=clamp(v,0,1); saveSettings(); if(master) master.gain.value=.2*SET.vol; if(aud) aud.volume=SET.vol; },
+    playSong(i){ SET.list=SONGS[i]?groupOf(SONGS[i]):'keygen'; SET.src='synth'; saveSettings(); stopAud(); pickSong(i); if(!want){ want=true; try{ localStorage.setItem('msr_music','on'); }catch(_){} } stopSynth(); startSynth(); },
+    next(){
+      if(SET.list==='henhen'){ const items=HENHEN_IDX.map(i=>({s:i})).concat(userList.map((_,i)=>({f:i}))); if(!items.length) return;
+        let pos=SET.src==='file'?HENHEN_IDX.length+userIdx:Math.max(0,HENHEN_IDX.indexOf(cur)); pos=SET.shuffle?Math.floor(Math.random()*items.length):(pos+1)%items.length;
+        const it=items[pos]; return it.f!=null?this.playUserTrack(it.f):this.playSong(it.s); }
+      const g=GROUPS[SET.list]||KEYGEN_IDX, k=g.indexOf(cur); this.playSong(SET.shuffle?g[Math.floor(Math.random()*g.length)]:g[(k+1)%g.length]); },
+    playUserTrack(i){ SET.list='henhen'; SET.src='file'; saveSettings(); stopSynth(); if(!want){ want=true; try{ localStorage.setItem('msr_music','on'); }catch(_){} } return playUser(i); },
+    useList(l){ SET.list=l; if(l!=='henhen'){ SET.src='synth'; if(groupOf(SONGS[cur])!==l) pickSong(GROUPS[l][0]); } else if(SET.src!=='file'&&!SONGS[cur].henhen&&HENHEN_IDX.length) pickSong(HENHEN_IDX[0]); saveSettings(); if(want){ stop(); start(); } },
+    blip(){ if(!ac||!want||!on) return; tone('square',1320,ac.currentTime,.06,.06,false,1760); },
   };
 })();
+// ---- the player's own songs, kept in this browser (IndexedDB) ----
+const MyTracks={
+  db:null,
+  async open(){ if(this.db) return this.db; return this.db=await new Promise((res,rej)=>{ const r=indexedDB.open('msr_music',1); r.onupgradeneeded=()=>r.result.createObjectStore('tracks',{keyPath:'id'}); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); },
+  async all(){ try{ const db=await this.open(); return await new Promise((res,rej)=>{ const q=db.transaction('tracks').objectStore('tracks').getAll(); q.onsuccess=()=>res(q.result.sort((a,b)=>a.added-b.added)); q.onerror=()=>rej(q.error); }); }catch(_){ return []; } },
+  async add(file){ const db=await this.open(); const t={id:'t'+Date.now()+Math.random().toString(36).slice(2,6),name:file.name.replace(/\.[^.]+$/,'').slice(0,60),blob:file,added:Date.now()};
+    await new Promise((res,rej)=>{ const tx=db.transaction('tracks','readwrite'); tx.objectStore('tracks').put(t); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); }); return t; },
+  async del(id){ const db=await this.open(); await new Promise((res,rej)=>{ const tx=db.transaction('tracks','readwrite'); tx.objectStore('tracks').delete(id); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); }); },
+};
+MyTracks.all().then(l=>{ Music.userList=l; });
+
+/* ============ SETTINGS: music, playlists, full screen, LDM ============ */
+function isFull(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
+function toggleFull(){
+  try{
+    if(isFull()){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); return Promise.resolve(true); }
+    const el=document.documentElement, fn=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(!fn) return Promise.resolve(false);
+    const r=fn.call(el); return (r&&r.then?r:Promise.resolve()).then(()=>true,()=>false);
+  }catch(_){ return Promise.resolve(false); }
+}
+function setLDM(v){ SET.ldm=!!v; saveSettings(); resize(); }
+function settingsCard(back){
+  back=back||(()=>{ if(G.state==='play') closeCard(); else titleCard(); });
+  const tab=['henhen','dash'].includes(SET.list)?SET.list:'keygen';
+  const songs=SONGS.map((S,i)=>groupOf(S)!==tab?'':`<li><button class="song${SET.src!=='file'&&Music.cur===i&&Music.on?' on':''}" data-song="${i}"><span>▶</span> ${esc(S.name)} <small>${S.bpm} BPM, ${S.mode}</small></button></li>`).join('');
+  const mine=Music.userList.map((t,i)=>`<li><button class="song${SET.src==='file'&&Music.userIdx===i&&Music.on?' on':''}" data-my="${i}"><span>▶</span> ${esc(t.name)}</button><button class="rm" data-rm="${esc(t.id)}" aria-label="Remove ${esc(t.name)}">Remove</button></li>`).join('');
+  openCard(`<h2>Settings</h2>
+  <h3>Music</h3>
+  <div class="row srow">
+    <button id="sMus" class="${Music.on?'on':''}">Music: ${Music.on?'On':'Off'}</button>
+    <label class="vol">Volume <input id="sVol" type="range" min="0" max="100" value="${Math.round(SET.vol*100)}" aria-label="Music volume"></label>
+    <button id="sShuf" class="${SET.shuffle?'on':''}">Shuffle: ${SET.shuffle?'On':'Off'}</button>
+    <button id="sNext">Next song</button>
+  </div>
+  <div class="row" id="lbTabs" role="tablist">
+    <button role="tab" data-tab="keygen" class="${tab==='keygen'?'on':''}" aria-selected="${tab==='keygen'}">Keygen Classics (${KEYGEN_IDX.length})</button>
+    <button role="tab" data-tab="dash" class="${tab==='dash'?'on':''}" aria-selected="${tab==='dash'}">Dash Mode (${DASH_IDX.length})</button>
+    <button role="tab" data-tab="henhen" class="${tab==='henhen'?'on':''}" aria-selected="${tab==='henhen'}">Henhen :) (${HENHEN_IDX.length+Music.userList.length})</button>
+  </div>
+  ${tab!=='henhen'?`<ul class="songs">${songs}</ul><p class="hint">${tab==='dash'?'Fast, bouncy original tracks with a rhythm-game feel, made for this game.':'Original chiptune tracks made for this game, generated live in your browser.'}</p>`
+   :`${(HENHEN_IDX.length||mine)?`<ul class="songs">${HENHEN_IDX.map(i=>`<li><button class="song${SET.src!=='file'&&Music.cur===i&&Music.on?' on':''}" data-song="${i}"><span>▶</span> ${esc(SONGS[i].name)} <small>chiptune version</small></button></li>`).join('')}${mine}</ul>`:'<p>Your <b>Henhen :)</b> playlist is empty.</p>'}
+     <div class="row srow"><button id="sCrush" class="${SET.crush?'on':''}">8-bit filter for your songs: ${SET.crush?'On':'Off'}</button></div>
+     <label class="addsong"><input id="sFile" type="file" accept="audio/*" multiple hidden><span>Add songs from this device</span></label>
+     <p class="hint">Für Elise, the Can-Can and the Wellerman are public-domain classics from your list, arranged as chiptune. Add your other songs from this device: they stay in this browser, aren’t uploaded, and other players can’t hear them.</p>`}
+  <p id="sErr" class="hint" style="color:var(--danger)"></p>
+  <h3>Display</h3>
+  <div class="row srow">
+    <button id="sFull" class="${isFull()?'on':''}">Full screen: ${isFull()?'On':'Off'}</button>
+    <button id="sLdm" class="${SET.ldm?'on':''}">LDM (Low Detail Mode): ${SET.ldm?'On':'Off'}</button>
+  </div>
+  <p class="hint">LDM turns off extra effects (dust, sparks, glows, background hills and stars) and draws at a lower resolution, so the game runs smoother on slower computers.</p>
+  <div class="row"><button class="primary" id="sDone">Done</button></div>`,c=>{
+    const err=m=>{ const e=c.querySelector('#sErr'); if(e) e.textContent=m||''; };
+    c.querySelector('#sMus').onclick=()=>{ Music.toggle(); syncMusicBtn(); settingsCard(back); };
+    c.querySelector('#sVol').oninput=e=>Music.setVolume(e.target.value/100);
+    c.querySelector('#sShuf').onclick=()=>{ SET.shuffle=!SET.shuffle; saveSettings(); settingsCard(back); };
+    c.querySelector('#sNext').onclick=async()=>{ await Music.next(); syncMusicBtn(); settingsCard(back); if(Music.lastErr){ err(Music.lastErr); Music.lastErr=''; } };
+    c.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ Music.useList(b.dataset.tab); settingsCard(back); });
+    c.querySelectorAll('[data-song]').forEach(b=>b.onclick=()=>{ Music.playSong(+b.dataset.song); syncMusicBtn(); settingsCard(back); });
+    c.querySelectorAll('[data-my]').forEach(b=>b.onclick=async()=>{ const ok=await Music.playUserTrack(+b.dataset.my); syncMusicBtn(); settingsCard(back); if(!ok&&Music.lastErr){ err(Music.lastErr); Music.lastErr=''; } });
+    c.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{ await MyTracks.del(b.dataset.rm); Music.userList=await MyTracks.all(); settingsCard(back); });
+    const cr=c.querySelector('#sCrush'); if(cr) cr.onclick=()=>{ Music.setCrush(!SET.crush); settingsCard(back); };
+    const f=c.querySelector('#sFile');
+    if(f) f.onchange=async()=>{ try{ for(const file of f.files){ if(file.size>40e6){ err(`${file.name} is too big (over 40 MB).`); continue; } await MyTracks.add(file); } Music.userList=await MyTracks.all(); settingsCard(back); }
+      catch(_){ err('Couldn’t save songs in this browser. Private browsing can block this.'); } };
+    c.querySelector('#sFull').onclick=()=>toggleFull().then(ok=>{ setTimeout(()=>{ settingsCard(back); if(!ok){ const e=document.getElementById('sErr'); if(e) e.textContent='Full screen isn’t allowed in this window. On claude.ai, open the game in its own tab or play the Vercel version, then try again.'; } },150); });
+    c.querySelector('#sLdm').onclick=()=>{ setLDM(!SET.ldm); settingsCard(back); };
+    c.querySelector('#sDone').onclick=back;
+  });
+}
 
 /* ============ STATE ============ */
 let G,rv,as,pack;
@@ -614,6 +853,7 @@ function newGame(){
   const seed=(Math.random()*1e9)|0;
   tubeX0=0;tubeX1=0;
   gen(WORLD_SEED);   // same map for everyone so online players share one world
+  ORIG.t=tiles.slice(); ORIG.b=bgA.slice();
   G={seed,R:rng(seed+7),state:'title',paused:true,t:0,startClock:12*60+30,tau:.5,storm:null,flare:null,devil:null,devilDone:false,
      events:new Set(),msgs:[],invOpen:false,warp:1,eva:false,mode:'dig',sel:4,suit:100,shR:false,shA:false,fill:null,roofLight:1,roofShield:0,crafted:0,placed:0,dug:0,beacons:[],stormsSealed:0,stormsHit:0,lamps:[],
      inv:{regolith:0,basalt:0,sand:0,ice:0,iron:0,brick:8,glass:0,plate:2,door:0,lamp:2,beacon:0,ladder:4,titanium:0,opal:0,meteorite:0},
@@ -643,7 +883,7 @@ function sayOnce(key,cool,who,text,kind){ const now=G.t; if(G.toastT[key]!=null&
 
 /* ============ CARDS ============ */
 const card=$('card'), overlay=$('overlay');
-function openCard(html,onBind){ card.innerHTML=html; overlay.hidden=false; G.paused=true; if(onBind) onBind(card); const f=card.querySelector('button'); if(f) f.focus({preventScroll:true}); }
+function openCard(html,onBind){ card.innerHTML=html; overlay.hidden=false; overlay.classList.toggle('menu',!G||G.state==='title'); G.paused=true; if(onBind) onBind(card); const f=card.querySelector('button'); if(f) f.focus({preventScroll:true}); }
 function closeCard(){ overlay.hidden=true; card.innerHTML=''; if(G.state==='play'||G.state==='journey') G.paused=false; lastTime=performance.now(); }
 function eventCard({title,who,body,data,choices,after}){
   const ch=(choices||[{label:'Continue'}]).map((c,i)=>`<button data-i="${i}">${c.label}${c.sub?`<small>${c.sub}</small>`:''}</button>`).join('');
@@ -656,7 +896,7 @@ function titleCard(){
   openCard(`<h1>Supply Run to Bravo</h1>
   <p style="font-family:var(--pixel);font-size:22px;margin:0 0 8px;color:var(--teal)">HIF Mars Mission Trainer</p>
   <p class="who">A Junior Astronaut Mission Trainer by The Royal Beauties, NASA Space Apps Challenge 2026</p>
-  <p>Base Alpha is shutting down. You and your crewmate have one job: move <b>all 20 crates of food</b> 24 km across Mars to Base Bravo. Your rover can only carry 200 kg at a time, so you’ll make several trips, unless you explore deep caves for rare minerals and build a bigger rover.</p>
+  <p>Base Alpha is shutting down. You and your crewmate have one job: move <b>all 4 crates of food</b> 24 km across Mars to Base Bravo. Your rover can only carry 200 kg at a time on Medium and Hard, so you’ll make several trips (on Easy, everything fits in one trip), unless you explore deep caves for rare minerals and build a bigger rover.</p>
   <p>The numbers in this game come from real Mars missions: how much oxygen people breathe, how much sunlight reaches Mars, how strong the radiation is, and what dust storms and solar flares did to real rovers.</p>
   <p>First you’ll design your rover in the garage. Then watch your oxygen and battery, keep the food safe, and race to get everything to Bravo. The fastest crews make the world leaderboard.</p>
   <p id="tOnline" style="font-size:15px;color:var(--teal);font-weight:700"></p>
@@ -666,7 +906,7 @@ function titleCard(){
     <button class="mode primary" id="bSolo"><b>Solo</b><small>Just you and your crewmate on Mars.</small></button>
     <button class="mode" id="bMulti"><b>Multiplayer</b><small>Join a lobby of up to 5 astronauts. Medium or Hard, with stronger storms.</small></button>
   </div>
-  <div class="row"><button id="bLB">Leaderboard</button><button id="bBadges">Badges (${BADGES.filter(b=>myBadges()[b.id]).length}/${BADGES.length})</button><button id="bHowTo">How to play</button><button id="bMus">Music: ${Music.on?'on':'off'}</button></div>`,c=>{
+  <div class="row"><button id="bLB">Leaderboard</button><button id="bBadges">Badges (${BADGES.filter(b=>myBadges()[b.id]).length}/${BADGES.length})</button><button id="bHowTo">How to play</button><button id="bSet">Settings</button></div>`,c=>{
     c.querySelector('#iName').addEventListener('change',e=>setCallsign(e.target.value));
     c.querySelector('#iName').addEventListener('keydown',e=>e.stopPropagation());
     netUI();
@@ -675,7 +915,7 @@ function titleCard(){
     bm.onclick=()=>{ setCallsign(c.querySelector('#iName').value); Music.start(); diffCard('multi'); };
     c.querySelector('#bLB').onclick=()=>leaderboardCard(titleCard);
     c.querySelector('#bBadges').onclick=()=>badgeCard(titleCard); c.querySelector('#bHowTo').onclick=()=>{ Music.start(); helpCard(titleCard); };
-    const mb=c.querySelector('#bMus'); mb.onclick=()=>{ const on=Music.toggle(); mb.textContent='Music: '+(on?'on':'off'); syncMusicBtn(); };
+    c.querySelector('#bSet').onclick=()=>{ Music.start(); settingsCard(titleCard); };
   });
 }
 
@@ -723,19 +963,19 @@ function helpCard(back){
   <div class="ctrl"><kbd>D / →</kbd><span>Drive right (east, toward Bravo)</span><kbd>A / ←</kbd><span>Drive left. If the rover faces the other way it backs up slowly, so press U to turn around</span><kbd>S / Space</kbd><span>Brake</span>
   <kbd>F</kbd><span>Storm shelter + electronics safe mode (rover stops, crew moves behind the water wall)</span>
   <kbd>H</kbd><span>Cargo heater on or off</span><kbd>O</kbd><span>Stow or deploy solar panels</span>
-  <kbd>T</kbd><span>Wait faster (×4) while parked</span><kbd>M</kbd><span>Music on or off</span><kbd>E</kbd><span>Go outside on an EVA (rover must be stopped)</span><kbd>P</kbd><span>Pause</span></div>
+  <kbd>T</kbd><span>Wait faster (×4) while parked</span><kbd>M</kbd><span>Music on or off (more in Settings: songs, playlists, full screen, LDM)</span><kbd>E</kbd><span>Go outside on an EVA (rover must be stopped)</span><kbd>P</kbd><span>Pause</span></div>
   <p style="font-size:15px">The rover has real suspension: each wheel has a spring and damper. Flooring it lifts the nose, braking dips it, and hitting a crest fast will launch you. Ease off before drops so the springs don’t bottom out.</p>
   <h3>On an EVA (spacewalk on Mars)</h3>
   <div class="ctrl"><kbd>A / D</kbd><span>Walk</span><kbd>W / Space</kbd><span>Jump (low gravity!)</span><kbd>Click / tap</kbd><span>Dig a block (hold)</span>
   <kbd>I</kbd><span>Open or close your inventory (holds 40 items)</span><kbd>1 – 0 / wheel</kbd><span>Pick a block</span><kbd>Right click</kbd><span>Place the block (or switch Dig/Build with Q)</span><kbd>C</kbd><span>Fabricator: craft bricks, glass, metal plates, doors, lamps and beacons (near the rover)</span><kbd>Shift + 1 – 5</kbd><span>Repair jobs when you stand next to the rover</span><kbd>E</kbd><span>Climb back in</span></div>
   <h3>The mission</h3>
-  <p>Move all 20 food crates from Base Alpha to Base Bravo. The rover only carries 200 kg at first, and your pack holds only 40 items, so you’ll drive back and forth. Stop next to a base to dock: the crew refuels and repairs you, and you load or unload food. Press U to turn the rover around.</p>
+  <p>Move all 4 food crates from Base Alpha to Base Bravo. The rover only carries 200 kg at first, and your pack holds only 40 items, so you’ll drive back and forth. Stop next to a base to dock: the crew refuels and repairs you, and you load or unload food. Press U to turn the rover around.</p>
   <h3>Caves and a bigger rover</h3>
   <p>Look for CAVE signs with ladders going down. Deep in the caves you’ll find rare titanium ore, opal and buried meteorites. Bring them to a base workshop to build bigger cargo racks, so you need fewer trips. On a ladder, W climbs up and S climbs down.</p>
   <h3>Solo, multiplayer and the leaderboard</h3>
   <p>Pick Solo (Easy, Medium or Hard) or Multiplayer (Medium or Hard, up to 5 astronauts per lobby, stronger storms) on the start screen. Finishing missions earns speed, health and explorer badges. Everyone plays the same map, and missions that deliver every crate post their mission time to the world leaderboard. Fastest time wins.</p>
   <h3>Playing online</h3>
-  <p>In Multiplayer, everyone playing at the same time shares one Mars. You’ll see other crews’ rovers and astronauts with their callsigns, and their digging and building appears in your world while they’re online. The Online button shows who’s playing. Each crew still runs its own food mission.</p>
+  <p>In Multiplayer, everyone playing at the same time shares one Mars. You’ll see other crews’ rovers and astronauts with their callsigns, and their digging and building appears in your world while they’re online. When someone logs off, their builds disappear. The Online button shows who’s playing. Each crew still runs its own food mission.</p>
   <h3>Building shelters</h3>
   <p>When a storm warning comes in, wall in the rover and give it a roof. Any solid block keeps sand out, airlock doors let you walk through, ice blocks are extra good against radiation, and glass in the roof lets sunlight reach your panels. A red glow shows where the shelter is still open; green means sealed.</p>
   <h3>Keep the mission alive</h3>
@@ -768,8 +1008,8 @@ function dataCard(){
 }
 function pauseCard(){
   openCard(`<h2>Paused</h2><p>Mission time ${clockStr()}. ${G.alpha.length} crates still at Alpha, ${rv.crates.length} on the rover.</p>
-  <div class="row"><button class="primary" id="bRes">Resume</button><button id="bH">How to play</button><button id="bLBp">Leaderboard</button><button id="bRe">Restart mission</button></div>`,c=>{
-    c.querySelector('#bRes').onclick=closeCard; c.querySelector('#bH').onclick=()=>helpCard(pauseCard); c.querySelector('#bLBp').onclick=()=>leaderboardCard(pauseCard);
+  <div class="row"><button class="primary" id="bRes">Resume</button><button id="bH">How to play</button><button id="bLBp">Leaderboard</button><button id="bSetP">Settings</button><button id="bRe">Restart mission</button></div>`,c=>{
+    c.querySelector('#bRes').onclick=closeCard; c.querySelector('#bH').onclick=()=>helpCard(pauseCard); c.querySelector('#bLBp').onclick=()=>leaderboardCard(pauseCard); c.querySelector('#bSetP').onclick=()=>settingsCard(pauseCard);
     c.querySelector('#bRe').onclick=()=>{ c.innerHTML=`<h2>Restart?</h2><p>You’ll lose this drive and start over at Base Alpha.</p><div class="row"><button class="primary" id="y">Restart</button><button id="n">Keep driving</button></div>`;
       c.querySelector('#y').onclick=restart; c.querySelector('#n').onclick=pauseCard; };
   });
@@ -997,9 +1237,9 @@ function buildTrack(){
 $('bPause').onclick=()=>G.state==='play'&&pauseCard();
 $('bData').onclick=()=>G.state==='play'&&dataCard();
 $('bHelp').onclick=()=>G.state==='play'&&helpCard();
-function syncMusicBtn(){ const b=$('bMusic'); b.classList.toggle('on',Music.on); b.textContent=Music.on?'Music on':'Music off'; }
+function syncMusicBtn(){ const b=$('bMusic'); if(b) b.textContent='Settings'; }
 $('bOnline').onclick=()=>G.state==='play'&&rosterCard();
-$('bMusic').onclick=()=>{ Music.toggle(); syncMusicBtn(); };
+$('bMusic').onclick=()=>G.state==='play'&&settingsCard();
 syncMusicBtn();
 $('bGauges').onclick=()=>{ if(innerWidth<=560) document.body.classList.toggle('show-gauges'); else document.body.classList.toggle('hide-gauges'); };
 
@@ -1105,7 +1345,7 @@ function placeBlock(){
   if(k==='beacon'){ G.beacons.push({x:tx,y:ty,km:kmAt(tx)}); say('Crew',`Outpost beacon planted at kilometer ${fmt(kmAt(tx),1)}. Future crews will find your shelter here.`); buildTrack(); }
 }
 function tileColor(t){ if(t===T.WR||t===T.WL) t=T.DUST; return ({1:'#c8693a',2:'#a6532c',3:'#5a4038',4:'#dba06a',5:'#d9eef5',6:'#7d564b',10:'#e7b47e',13:'#a24e2c',14:'#9aa3ad',15:'#e8a417',16:'#fff3b0',18:'#b9b3ad',19:'#9cc7dd'})[t]||'#a6532c'; }
-function puff(x,y,c,n){ for(let i=0;i<n;i++) G.particles.push({x,y,vx:(Math.random()-.5)*4,vy:-Math.random()*3,life:.6+Math.random()*.6,max:1.2,c,s:.18+Math.random()*.15}); }
+function puff(x,y,c,n){ if(SET.ldm) return; for(let i=0;i<n;i++) G.particles.push({x,y,vx:(Math.random()-.5)*4,vy:-Math.random()*3,life:.6+Math.random()*.6,max:1.2,c,s:.18+Math.random()*.15}); }
 
 /* ============ BUILDING: inventory, crafting, shelters ============ */
 const ITEMS={
@@ -1215,15 +1455,16 @@ function drawFill(){
 }
 
 /* ============ MULTI-TRIP MISSION: bases, docking, legs, rover upgrades ============ */
-const FOOD_TOTAL=20, CRATE_KG=50, CREW_DAYS=25;
+const FOOD_TOTAL=4, CRATE_KG=50, CREW_DAYS=25;
 const RACKS=[
   {name:'Standard cargo rack',cap:200,mass:0,cols:4},
   {name:'Cargo rack Mk II',cap:325,mass:80,cols:5,need:{plate:3,titanium:2},desc:'A longer rack with titanium rails. Fits 6 crates.'},
   {name:'Cargo rack Mk III',cap:450,mass:160,cols:6,need:{plate:4,titanium:4,meteorite:2},desc:'Iron-nickel from meteorites makes the frame strong enough for 9 crates.'},
   {name:'Long-bed rover with a 4th axle',cap:600,mass:300,cols:8,need:{plate:6,titanium:3,meteorite:3,opal:3},desc:'Adds an extra pair of wheels and silica-aerogel insulation made from opal. Fits 12 crates.'},
+  {name:'Mega-hauler (Easy mode)',cap:1100,mass:0,cols:10,easyOnly:true,desc:'An extra-long Easy-mode rover.'},
 ];
-const EXT=[0,.55,1.1,2.2];
-const MOUNTS_L=[[-1.85,0,1.85],[-2.3,-.2,1.85],[-2.8,-.45,1.85],[-3.95,-2.1,-.3,1.85]];
+const EXT=[0,.55,1.1,2.2,3.2];
+const MOUNTS_L=[[-1.85,0,1.85],[-2.3,-.2,1.85],[-2.8,-.45,1.85],[-3.95,-2.1,-.3,1.85],[-5,-3.1,-1,1.85]];
 const PACK_ITEMS=[
   {k:'o2',name:'Oxygen tank',mass:14,max:4,desc:'+0.35 kg of oxygen, about 5 hours for 2 people.'},
   {k:'kits',name:'Repair kit',mass:8,max:4,desc:'Patches the hull or fixes wheels on an EVA.'},
@@ -1269,7 +1510,7 @@ function baseCard(which,notes=[]){
   const delivered=crewDays(G.bravo), done=G.alpha.length===0&&rv.crates.length===0;
   const maxLoad=()=>Math.max(0,Math.min(G.alpha.length,Math.floor((capKg()-extrasKg())/CRATE_KG)));
   if(which==='alpha') G.loadN=Math.min(G.loadN==null?99:G.loadN,maxLoad());
-  const nr=RACKS[rv.lvl+1];
+  const nr=(RACKS[rv.lvl+1]&&!RACKS[rv.lvl+1].easyOnly)?RACKS[rv.lvl+1]:null;
   const needTxt=nr?Object.entries(nr.need).map(([k,v])=>`<span style="color:${G.inv[k]>=v?'inherit':'var(--danger)'}">${v} ${ITEMS[k].name.toLowerCase()} (have ${G.inv[k]})</span>`).join(', '):'';
   const canUp=nr&&Object.entries(nr.need).every(([k,v])=>G.inv[k]>=v);
   const alphaQ=G.alpha.length?fmt(G.alpha.reduce((s,c)=>s+c,0)/G.alpha.length,0):'0';
@@ -1367,7 +1608,7 @@ function stormCardN(){
    astronauts, and their digging and building shows up in your world. Nothing is stored:
    when someone leaves, their ghost goes too. Without the room (a saved copy, GitHub Pages,
    signed-out viewers) the game runs as single player. */
-const NET={room:null,peers:[],seq:0,edits:[],lastSeq:new Map(),ghost:new Map(),t:0,name:'',col:0,names:new Map()};
+const NET={touched:new Map(),room:null,peers:[],seq:0,edits:[],lastSeq:new Map(),ghost:new Map(),t:0,name:'',col:0,names:new Map()};
 const NET_COLORS=['#2a8f87','#c4501f','#7b5ea7','#d99312','#3d7fb3','#b8336a','#3a8f48','#8d6e63'];
 const cleanName=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,'').trim().slice(0,16);
 try{ NET.name=cleanName(localStorage.getItem('msr_name')); }catch(_){}
@@ -1387,7 +1628,7 @@ async function netInit(){
       for(const p of ch.joined.concat(ch.updated)) if(!p.isMe) netApplyEdits(p);
       if(G&&G.state==='play'){
         ch.joined.forEach(p=>{ if(!p.isMe&&p.kind==='viewer'&&p.presence&&p.presence.n) say('Comms',`${cleanName(p.presence.n)} is online in this world.`); });
-        ch.left.forEach(p=>{ const n=NET.names.get(p.peer); if(n) say('Comms',`${n} went offline.`); NET.ghost.delete(p.peer); NET.lastSeq.delete(p.peer); });
+        ch.left.forEach(p=>{ const n=NET.names.get(p.peer), r=netRevert(p.peer); if(n) say('Comms',`${n} went offline${r?', so their builds were removed':''}.`); NET.ghost.delete(p.peer); NET.lastSeq.delete(p.peer); });
       }
       ch.peers.forEach(p=>{ if(p.presence&&p.presence.n) NET.names.set(p.peer,cleanName(p.presence.n)); });
       netUI();
@@ -1407,7 +1648,7 @@ function netApplyEdits(p){
     last=Math.max(last,sq);
     if(t!==T.AIR&&(overlapsRover(x,y)||(G.eva&&x+1>as.x&&x<as.x+as.w&&y+1>as.y&&y<as.y+as.h))) continue;
     const cur=getT(x,y); if(cur===T.BED||cur===T.HULL||cur===T.GLASS) continue;
-    setT(x,y,t); changed=true;
+    setT(x,y,t); changed=true; netRecord(p.peer,x,y);
     if(t===T.AIR&&y>=floorA[x]&&bgA[y*W+x]!==2) bgA[y*W+x]=1;
   }
   NET.lastSeq.set(p.peer,last);
@@ -1475,10 +1716,10 @@ function drawGhosts(now,dt){
     const k=Math.min(1,dt*10); g.x+=(s.rx-g.x)*k; g.y+=(s.ry-g.y)*k; g.a+=((s.ra||0)-g.a)*k;
     if(typeof s.ax==='number'){ g.ax+=(s.ax-g.ax)*k; g.ay+=(s.ay-g.ay)*k; }
     const X=sx(g.x), Y=sy(g.y); if(X<-300||X>VW+300) continue;
-    const lv=clamp(s.lv|0,0,3), col=NET_COLORS[(s.c|0)%NET_COLORS.length];
+    const lv=clamp(s.lv|0,0,4), col=NET_COLORS[(s.c|0)%NET_COLORS.length];
     ctx.save(); ctx.globalAlpha=.6;
     ctx.save(); ctx.translate(X,Y); ctx.rotate(g.a); ctx.scale(TS*(s.rd<0?-1:1),TS);
-    drawRoverBody(ctx,null,{ext:EXT[lv],cols:RACKS[lv].cols,slots:RACKS[lv].cap/50|0,mounts:MOUNTS_L[lv],chassisKey:'std',hullKey:'basic',powerKey:'solar',crates:Array(clamp(s.cr|0,0,12)).fill(100),strap:100,stowed:false,dust:0,hullPct:100,lights:false});
+    drawRoverBody(ctx,null,{ext:EXT[lv],cols:RACKS[lv].cols,slots:RACKS[lv].cap/50|0,mounts:MOUNTS_L[lv],chassisKey:'std',hullKey:'basic',powerKey:'solar',crates:Array(clamp(s.cr|0,0,20)).fill(100),strap:100,stowed:false,dust:0,hullPct:100,lights:false});
     ctx.restore();
     (Array.isArray(s.wh)?s.wh:[]).slice(0,4).forEach(w=>{ if(!Array.isArray(w)) return; ctx.save(); ctx.translate(sx(g.x+(+w[0]||0)),sy(g.y+(+w[1]||0))); ctx.scale(TS,TS); drawWheel(ctx,0,0,+w[2]||0,'alu',false,col); ctx.restore(); });
     if(s.ev){ ctx.save(); ctx.translate(sx(g.ax+.35),sy(g.ay)); if(s.af<0) ctx.scale(-1,1); ctx.scale(TS,TS);
@@ -1539,11 +1780,23 @@ function httpBeat(){
   };
   go();
 }
-function netApplyOne(x,y,t){
+// ---- each other player's digging and building is undone when they log off ----
+function netRecord(peer,x,y){ let s=NET.touched.get(peer); if(!s){ s=new Set(); NET.touched.set(peer,s); } s.add(y*W+x); }
+function netRevert(peer){
+  const s=NET.touched.get(peer); NET.touched.delete(peer); if(!s||!ORIG.t) return 0;
+  let n=0;
+  for(const i of s){ const x=i%W, y=(i/W)|0;
+    if(tiles[i]===ORIG.t[i]) continue;
+    if(ORIG.t[i]!==T.AIR&&(overlapsRover(x,y)||(G.eva&&x+1>as.x&&x<as.x+as.w&&y+1>as.y&&y<as.y+as.h))) continue;
+    tiles[i]=ORIG.t[i]; bgA[i]=ORIG.b[i]; n++; }
+  return n;
+}
+function netApplyOne(x,y,t,peer){
   if(!Number.isInteger(x)||!Number.isInteger(y)||x<1||x>=W-1||y<1||y>=H-2||!NET_TILES.has(t)) return false;
   if(t!==T.AIR&&(overlapsRover(x,y)||(G.eva&&x+1>as.x&&x<as.x+as.w&&y+1>as.y&&y<as.y+as.h))) return false;
   const cur=getT(x,y); if(cur===T.BED||cur===T.HULL||cur===T.GLASS) return false;
   setT(x,y,t); if(t===T.AIR&&y>=floorA[x]&&bgA[y*W+x]!==2) bgA[y*W+x]=1;
+  if(peer) netRecord(peer,x,y);
   return true;
 }
 async function httpSyncLoop(){
@@ -1557,14 +1810,15 @@ async function httpSyncLoop(){
       LOBBY.count=j.count; LOBBY.multi=j.multi;
       if(NET.room&&NET.room.http){
         let maxS=HTTP.cursor;
-        for(const e of (j.edits||[])){ if(e.s>maxS) maxS=e.s; if(e.by!==HTTP.id&&tiles) netApplyOne(+e.x,+e.y,+e.t); }
+        const present=new Set((j.peers||[]).map(q=>q.id));   // only builds from players who are still online
+        for(const e of (j.edits||[])){ if(e.s>maxS) maxS=e.s; if(e.by!==HTTP.id&&tiles&&present.has(e.by)) netApplyOne(+e.x,+e.y,+e.t,e.by); }
         HTTP.cursor=maxS;
         const ids=new Set(), peers=[];
         for(const q of (j.peers||[])){ ids.add(q.id); peers.push({peer:q.id,isMe:q.id===HTTP.id,sameTab:q.id===HTTP.id,kind:'viewer',presence:q.p||{}}); }
         if(!ids.has(HTTP.id)) peers.push({peer:HTTP.id,isMe:true,sameTab:true,kind:'viewer',presence:HTTP.last||{n:NET.name}});
         if(G&&G.state==='play'){
           for(const q of peers) if(!q.isMe&&!HTTP.known.has(q.peer)&&q.presence.n) say('Comms',`${cleanName(q.presence.n)} is online in this world.`);
-          for(const k of HTTP.known) if(!ids.has(k)){ const n=NET.names.get(k); if(n) say('Comms',`${n} went offline.`); NET.ghost.delete(k); }
+          for(const k of HTTP.known) if(!ids.has(k)){ const n=NET.names.get(k), r=netRevert(k); if(n) say('Comms',`${n} went offline${r?', so their builds were removed':''}.`); NET.ghost.delete(k); }
         }
         HTTP.known=new Set([...ids].filter(i=>i!==HTTP.id));
         peers.forEach(q=>{ if(q.presence&&q.presence.n) NET.names.set(q.peer,cleanName(q.presence.n)); });
@@ -1605,11 +1859,11 @@ function loadingCard(){
     Promise.all([services,new Promise(r=>setTimeout(r,2400))]).then(()=>{ clearInterval(tick); if(bar) bar.style.width='100%'; netUI(); setTimeout(titleCard,900); });
   });
 }
-function netLeave(){ HTTP.lobby=null; if(G) G.lobby=null; try{ if(NET.room&&!NET.room.http&&NET.room.leave) Promise.resolve(NET.room.leave()).catch(()=>{}); }catch(_){} NET.room=null; NET.peers=[]; NET.ghost.clear(); NET.lastSeq.clear(); NET.edits=[]; netUI(); }
+function netLeave(){ for(const k of [...NET.touched.keys()]) netRevert(k); HTTP.lobby=null; if(G) G.lobby=null; try{ if(NET.room&&!NET.room.http&&NET.room.leave) Promise.resolve(NET.room.leave()).catch(()=>{}); }catch(_){} NET.room=null; NET.peers=[]; NET.ghost.clear(); NET.lastSeq.clear(); NET.edits=[]; netUI(); }
 
 /* ============ DIFFICULTY, BADGES, LOBBIES (max 5) ============ */
 const DIFFS={
-  easy:{name:'Easy',desc:'Gentler storms and flares, softer landings, slower food spoilage. Solo only.',storm:.7,warn:1.3,flare:.6,dmg:.6,freezer:.5,storms:[1,1],flareChance:.3},
+  easy:{name:'Easy',desc:'Your rover carries all 4 crates in one trip. Gentler storms and flares, softer landings, slower food spoilage. Solo only.',storm:.7,warn:1.3,flare:.6,dmg:.6,freezer:.5,storms:[1,1],flareChance:.3},
   medium:{name:'Medium',desc:'The real challenge. Storms, flares and spoilage as described in the mission briefing.',storm:1,warn:1,flare:1,dmg:1,freezer:1,storms:[1,2],flareChance:.5},
   hard:{name:'Hard',desc:'Bigger storms with less warning, stronger flares, rougher landings and faster spoilage.',storm:1.3,warn:.75,flare:1.4,dmg:1.35,freezer:1.5,storms:[2,2],flareChance:.7},
 };
@@ -1621,7 +1875,7 @@ function diffCard(mode){
   <p>${mode==='multi'?'Multiplayer is Medium or Hard only, and storms hit harder than in solo play.':'Pick how tough Mars should be.'} Each difficulty has its own leaderboard.</p>
   <div class="modes">${opts.map((k,i)=>`<button class="mode${i===(mode==='multi'?0:1)?' primary':''}" data-d="${k}"><b>${DIFFS[k].name}</b><small>${DIFFS[k].desc}${mode==='multi'?' Multiplayer storms are about 20% stronger.':''}</small></button>`).join('')}</div>
   <div class="row"><button id="bBack">Back</button></div>`,c=>{
-    c.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ G.diff=b.dataset.d; if(mode==='multi') joinLobby(); else { netLeave(); G.play='solo'; lobbyMode('solo'); journeyIntro(()=>garageCard()); } });
+    c.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ G.diff=b.dataset.d; rv.lvl=G.diff==='easy'?1:0; G.loadN=null; if(mode==='multi') joinLobby(); else { netLeave(); G.play='solo'; lobbyMode('solo'); journeyIntro(()=>garageCard()); } });
     c.querySelector('#bBack').onclick=titleCard;
   });
 }
@@ -1631,14 +1885,14 @@ const BADGES=[
   {id:'fin_medium',icon:'🟠',name:'Mission complete: Medium',desc:'Deliver every crate on Medium.'},
   {id:'fin_hard',icon:'🔴',name:'Mission complete: Hard',desc:'Deliver every crate on Hard.'},
   {id:'team',icon:'🤝',name:'Team mission',desc:'Finish a mission in multiplayer.'},
-  {id:'spd_bronze',icon:'🥉',name:'Steady Driver',desc:'Finish a mission in under 36 hours of mission time.'},
-  {id:'spd_silver',icon:'🥈',name:'Swift Crew',desc:'Finish a mission in under 26 hours.'},
-  {id:'spd_gold',icon:'🥇',name:'Rocket Runner',desc:'Finish a mission in under 18 hours.'},
+  {id:'spd_bronze',icon:'🥉',name:'Steady Driver',desc:'Finish a mission in under 12 hours of mission time.'},
+  {id:'spd_silver',icon:'🥈',name:'Swift Crew',desc:'Finish a mission in under 9 hours.'},
+  {id:'spd_gold',icon:'🥇',name:'Rocket Runner',desc:'Finish a mission in under 6 hours.'},
   {id:'hl_rad',icon:'☢️',name:'Radiation Safe',desc:'Finish with a crew radiation dose under 5 mSv.'},
   {id:'hl_air',icon:'🫁',name:'Fresh Air',desc:'Finish without your oxygen ever dropping below 25%.'},
   {id:'hl_hull',icon:'🛡️',name:'Iron Hull',desc:'Finish without the hull ever dropping below 50%.'},
   {id:'hl_suit',icon:'🧑‍🚀',name:'Spotless Suit',desc:'Finish without your spacesuit getting sandblasted.'},
-  {id:'hl_food',icon:'🥫',name:'Food Guardian',desc:'Deliver at least 90% of the food (450 crew-days).'},
+  {id:'hl_food',icon:'🥫',name:'Food Guardian',desc:'Deliver at least 90% of the food (90 crew-days).'},
   {id:'ex_build',icon:'🧱',name:'Master Builder',desc:'Ride out a storm in a shelter you built.'},
   {id:'ex_cave',icon:'⛏️',name:'Cave Explorer',desc:'Find 5 or more rare minerals.'},
   {id:'ex_rover',icon:'🚙',name:'Rover Engineer',desc:'Build the long-bed rover.'},
@@ -1651,9 +1905,9 @@ function earnedThisMission(){
   const food=crewDays(G.bravo), ids=[];
   ids.push('fin_'+(G.diff||'medium'));
   if(G.play==='multi') ids.push('team');
-  if(G.t<36*60) ids.push('spd_bronze');
-  if(G.t<26*60) ids.push('spd_silver');
-  if(G.t<18*60) ids.push('spd_gold');
+  if(G.t<12*60) ids.push('spd_bronze');
+  if(G.t<9*60) ids.push('spd_silver');
+  if(G.t<6*60) ids.push('spd_gold');
   if(rv.dose<5) ids.push('hl_rad');
   if((G.minO2??1)>=.25) ids.push('hl_air');
   if((G.minHull??100)>=50) ids.push('hl_hull');
@@ -1684,8 +1938,7 @@ function badgeCard(back){
 // ---- leaderboard per difficulty ----
 function lbRowsFor(diff){
   return LB.all.map(r=>{
-    let e=r.d&&r.d[diff];
-    if(!e&&diff==='medium'&&typeof r.minutes==='number') e={minutes:r.minutes,food:r.food,trips:r.trips,mode:r.mode};
+    const e=r.d4&&r.d4[diff];
     return e&&typeof e.minutes==='number'&&e.minutes>0?{id:r.id,name:r.name,...e}:null;
   }).filter(Boolean).sort((a,b)=>a.minutes-b.minutes);
 }
@@ -1710,7 +1963,7 @@ async function lbInit(){
 }
 async function submitRun(run){
   // run = {minutes, food, trips, lvl, mode, diff}
-  try{ const all=JSON.parse(localStorage.getItem('msr_best2')||'{}'); const lb=all[run.diff]; if(!lb||run.minutes<lb.minutes){ all[run.diff]=run; localStorage.setItem('msr_best2',JSON.stringify(all)); } }catch(_){}
+  try{ const all=JSON.parse(localStorage.getItem('msr_best4')||'{}'); const lb=all[run.diff]; if(!lb||run.minutes<lb.minutes){ all[run.diff]=run; localStorage.setItem('msr_best4',JSON.stringify(all)); } }catch(_){}
   const label=DIFFS[run.diff].name;
   if(LB.http){
     try{
@@ -1723,12 +1976,11 @@ async function submitRun(run){
   try{
     const ref=LB.db.doc('leaderboard/'+LB.uid);
     const cur=await ref.get(); const old=cur.exists?cur.data():{};
-    const d={...(old.d||{})};
-    if(!d.medium&&typeof old.minutes==='number') d.medium={minutes:old.minutes,food:old.food,trips:old.trips,mode:old.mode};
+    const d={...(old.d4||{})};
     const prev=d[run.diff];
     if(prev&&prev.minutes<=run.minutes) return {saved:false,note:`Your best on ${label} is still ${fmtTime(prev.minutes)}.`};
     d[run.diff]={minutes:Math.round(run.minutes),food:Math.round(run.food),trips:run.trips,lvl:run.lvl,mode:run.mode,at:new Date().toISOString().slice(0,10)};
-    await ref.set({name:NET.name,d});
+    await ref.set({...old,name:NET.name,d4:d});
     return {saved:true,note:prev?`New personal best on ${label}! (was ${fmtTime(prev.minutes)})`:`Your first ${label} time on the leaderboard!`};
   }catch(e){
     return {saved:false,note:e&&(e.code==='not_permitted'||e.code==='invalid_argument')?'Your access to this game is view-only, so your time can’t be posted. Ask the owner to make you a Contributor.':'Your time couldn’t be posted to the leaderboard just now.'};
@@ -1739,7 +1991,7 @@ function leaderboardCard(back,diff,fresh){
   diff=diff||G.diff||'medium';
   if(LB.http&&!fresh) lbRefresh(diff).then(()=>{ if(!overlay.hidden&&card.querySelector('#lbTabs')) leaderboardCard(back,diff,true); });
   const rows=rowsFor(diff).slice(0,25).map((r,i)=>`<tr class="${r.id===LB.uid?'me':''}"><td>${i+1}</td><td>${esc(cleanName(r.name)||'Astronaut')}${r.id===LB.uid?' (you)':''}</td><td>${fmtTime(r.minutes)}</td><td>${r.food|0}</td><td>${r.trips|0}</td><td>${r.mode==='multi'?'Online':'Solo'}</td></tr>`).join('');
-  let lb=null; try{ lb=JSON.parse(localStorage.getItem('msr_best2')||'{}')[diff]; }catch(_){}
+  let lb=null; try{ lb=JSON.parse(localStorage.getItem('msr_best4')||'{}')[diff]; }catch(_){}
   openCard(`<h2>Fastest crews on Mars</h2>
   <div class="row" id="lbTabs" role="tablist">${Object.keys(DIFFS).map(k=>`<button role="tab" aria-selected="${k===diff}" class="${k===diff?'on':''}" data-t="${k}">${DIFFS[k].name}</button>`).join('')}</div>
   <p>Ranked by mission time to move every food crate from Base Alpha to Base Bravo on <b>${DIFFS[diff].name}</b>. Everyone plays the same map, so times are fair.</p>
@@ -1775,7 +2027,7 @@ async function netJoin(diff){
         for(const p of ch.joined.concat(ch.updated)) if(!p.isMe) netApplyEdits(p);
         if(G&&G.state==='play'){
           ch.joined.forEach(p=>{ if(!p.isMe&&p.kind==='viewer'&&p.presence&&p.presence.n) say('Comms',`${cleanName(p.presence.n)} is online in this world.`); });
-          ch.left.forEach(p=>{ const nm=NET.names.get(p.peer); if(nm) say('Comms',`${nm} went offline.`); NET.ghost.delete(p.peer); NET.lastSeq.delete(p.peer); });
+          ch.left.forEach(p=>{ const nm=NET.names.get(p.peer), r=netRevert(p.peer); if(nm) say('Comms',`${nm} went offline${r?', so their builds were removed':''}.`); NET.ghost.delete(p.peer); NET.lastSeq.delete(p.peer); });
         }
         ch.peers.forEach(p=>{ if(p.presence&&p.presence.n) NET.names.set(p.peer,cleanName(p.presence.n)); });
         netUI();
@@ -1838,7 +2090,7 @@ function journeyIntro(next){
 }
 function journeyStart(next){
   J={phase:'launch',t:0,next,alt:0,stage:1,sfuel:100,fuel:100,wasted:0,sep:[],flame:1,
-     y:0,vy:0,hull:100,dose:0,err:0,day:0,deb:[],debT:0,flare:null,flareDone:false,shelter:false,hits:0,
+     y:0,vy:0,hull:100,hearts:3,inv:0,dose:0,err:0,day:0,deb:[],debT:0,flare:null,flareDone:false,shelter:false,hits:0,
      edl:null,shake:0,msg:'',msgT:0};
   G.state='journey'; G.paused=false; overlay.hidden=true; card.innerHTML='';
   $('hud').hidden=true; buildJControls(); lastTime=performance.now();
@@ -1879,8 +2131,19 @@ function jNextStage(){
     eventCard({title:'On your way to Mars',who:'Mission Control',
       body:`The last stage fired you onto a path to Mars. You have ${Math.round(J.fuel)}% of your steering fuel left for the cruise. Stay close to the dotted path, dodge micrometeoroids, and get the crew into the shelter if the Sun flares up.`,
       data:'Spacecraft make several small “trajectory correction maneuvers” on the way to Mars to stay on target. Curiosity’s radiation detector measured about 1.8 mSv a day inside its spacecraft during the trip, almost 3 times the dose on Mars’ surface.',
-      choices:[{label:'Begin the cruise'}],after:()=>{ J.phase='cruise'; J.t=0; J.y=VH*.5; G.paused=false; jMsg('Day 1. Steer with W and S (or ▲ ▼) to stay on the dotted path.'); }});
+      choices:[{label:'Begin the cruise'}],after:()=>{ J.phase='cruise'; J.t=0; J.y=VH*.5; J.fuel0=J.fuel; G.paused=false; jMsg('Day 1. Steer with W and S (or ▲ ▼) to stay on the path and dodge asteroids. You have 3 hearts.'); }});
   }
+}
+function jCrash(){
+  J.phase='crashcard'; G.paused=true; Music.blip();
+  openCard(`<h2>Out of hearts!</h2>
+  <p>Three asteroid hits were too many: the rocket is too damaged to keep going. Mission Control is sending you back to the start of the cruise to try again.</p>
+  <p class="data"><b>Real data.</b> Space is mostly empty, but tiny bits of rock called micrometeoroids zip around at tens of kilometres per second. Spacecraft carry layered shields (called Whipple shields) that make them break apart before they reach the hull.</p>
+  <div class="row"><button class="primary" id="bRetry">Try the cruise again</button><button id="bSkipM">Skip to Mars</button></div>`,c=>{
+    c.querySelector('#bRetry').onclick=()=>{ Object.assign(J,{phase:'cruise',t:0,day:0,hearts:3,inv:2,deb:[],debT:1,fuel:J.fuel0??J.fuel,dose:0,err:0,flare:null,flareDone:false,shelter:false,hull:100,hits:0,y:VH*.5,vy:0});
+      closeCard(); G.paused=false; jMsg('Second try! You have 3 hearts again.'); };
+    c.querySelector('#bSkipM').onclick=()=>{ hideJControls(); G.journey={skipped:true}; const nx=J.next; J=null; G.state='title'; nx(); };
+  });
 }
 function jPathY(t){ return VH*.5+Math.sin(t*.11)*VH*.17+Math.sin(t*.031+1)*VH*.08; }
 function jUpdate(dt){
@@ -1907,7 +2170,9 @@ function jUpdate(dt){
     // micrometeoroids
     J.debT-=dt; if(J.debT<=0){ J.debT=.9+Math.random()*.9; J.deb.push({x:VW+30,y:VH*(.1+Math.random()*.8),r:5+Math.random()*9,vx:-(VW*.35+Math.random()*VW*.25),spin:Math.random()*6}); }
     const sxp=VW*.25;
-    J.deb.forEach(d=>{ d.x+=d.vx*dt; d.spin+=dt*3; if(!d.hit&&Math.hypot(d.x-sxp,d.y-J.y)<d.r+22){ d.hit=true; J.hull=Math.max(0,J.hull-8); J.hits++; J.shake=.6; jMsg('Micrometeoroid hit! Hull damaged.'); } });
+    J.inv=Math.max(0,J.inv-dt);
+    J.deb.forEach(d=>{ d.x+=d.vx*dt; d.spin+=dt*3; if(!d.hit&&J.inv<=0&&Math.hypot(d.x-sxp,d.y-J.y)<d.r+22){ d.hit=true; J.hearts--; J.hull=Math.max(0,J.hull-8); J.hits++; J.inv=1.6; J.shake=.6;
+      if(J.hearts<=0) jCrash(); else jMsg(`Asteroid hit! You lost a heart. ${J.hearts} ${J.hearts===1?'heart':'hearts'} left.`); } });
     J.deb=J.deb.filter(d=>d.x>-40&&!d.hit);
     if(J.t>=JCRUISE) jStartEDL();
   } else if(J.phase==='edl') jUpdateEDL(dt);
@@ -1973,7 +2238,7 @@ function jRender(now){
   const sh=J.shake>0?(Math.random()-.5)*J.shake*16:0;
   ctx.setTransform(DPR,0,0,DPR,sh*DPR,sh*.5*DPR);
   if(J.phase==='launch'||J.phase==='tmi') jRenderLaunch(now);
-  else if(J.phase==='cruise'||J.phase==='edlcard') jRenderCruise(now);
+  else if(J.phase==='cruise'||J.phase==='edlcard'||J.phase==='crashcard') jRenderCruise(now);
   else jRenderEDL(now);
   // status panel
   ctx.setTransform(DPR,0,0,DPR,0,0);
@@ -1982,12 +2247,22 @@ function jRender(now){
   const w=Math.min(VW-20,Math.max(...lines.map(l=>ctx.measureText(l).width))+24), h=lines.length*21+14;
   ctx.fillStyle='rgba(20,12,10,.78)'; ctx.fillRect(10,10,w,h); ctx.fillStyle='#f6e8dc';
   lines.forEach((l,i)=>ctx.fillText(l,22,17+i*21));
+  // hearts in the top-right corner during the cruise
+  if(J.phase==='cruise'||J.phase==='edlcard'||J.phase==='crashcard'){
+    const hs=Math.max(22,Math.min(34,VW/32));
+    for(let i=0;i<3;i++){ const x=VW-16-(3-i)*(hs+8), y=14, full=i<J.hearts;
+      ctx.save(); ctx.translate(x,y); ctx.scale(hs/16,hs/16);
+      ctx.beginPath(); ctx.moveTo(8,15); ctx.bezierCurveTo(-4,7,1,-2,8,4); ctx.bezierCurveTo(15,-2,20,7,8,15); ctx.closePath();
+      ctx.fillStyle=full?'#ff3b5c':'rgba(255,255,255,.12)'; ctx.fill(); ctx.lineWidth=1.6; ctx.strokeStyle=full?'#ffd0d8':'rgba(255,255,255,.6)'; ctx.stroke();
+      if(full){ ctx.fillStyle='rgba(255,255,255,.55)'; ctx.fillRect(3.5,4,2.5,2.5); }
+      ctx.restore(); }
+  }
   if(J.msgT>0&&J.msg){ ctx.font='700 16px "Atkinson Hyperlegible", system-ui, sans-serif'; const mw=Math.min(VW-30,ctx.measureText(J.msg).width+28);
     ctx.fillStyle='rgba(196,80,31,.92)'; ctx.fillRect((VW-mw)/2,VH*.16,mw,34); ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(J.msg,VW/2,VH*.16+17,VW-40); }
 }
 function jStatus(){
   if(J.phase==='launch'||J.phase==='tmi') return ['Launch from Earth',`Altitude: ${Math.round(J.alt)} km`,`Stage ${J.stage} fuel: ${Math.round(J.sfuel)}%`,`Fuel saved for the cruise: ${Math.max(25,Math.round(100-J.wasted))}%`];
-  if(J.phase==='cruise'||J.phase==='edlcard') return ['Cruise to Mars',`Day ${Math.round(J.day)} of ${JDAYS}`,`Steering fuel: ${Math.round(J.fuel)}%`,`Hull: ${J.hull}%`,`Crew radiation dose: ${fmt(J.dose,0)} mSv${J.shelter?' (in shelter)':''}`,`Off course: ${fmt(J.err*90,0)} m landing error`];
+  if(J.phase==='cruise'||J.phase==='edlcard'||J.phase==='crashcard') return ['Cruise to Mars',`Day ${Math.round(J.day)} of ${JDAYS}`,`Steering fuel: ${Math.round(J.fuel)}%`,`Hearts: ${'♥'.repeat(Math.max(0,J.hearts))}${'♡'.repeat(3-Math.max(0,J.hearts))}`,`Crew radiation dose: ${fmt(J.dose,0)} mSv${J.shelter?' (in shelter)':''}`,`Off course: ${fmt(J.err*90,0)} m landing error`];
   const e=J.edl||{};
   if(e.step==='power') return ['Powered descent',`Altitude: ${Math.round(e.alt)} m`,`Down speed: ${fmt(e.vy,1)} m/s`,`Distance to pad: ${Math.round(Math.abs(e.x))} m ${e.x>0?'(pad is to your left)':'(pad is to your right)'}`,`Rocket fuel: ${Math.round(e.fuel)}%`];
   return ['Entry, descent and landing',`Speed: ${Math.round(e.v||0).toLocaleString()} km/h`,e.step==='chute'?'Open the parachute between 1,250 and 1,700 km/h':'Heat shield temperature rising…'];
@@ -2032,7 +2307,8 @@ function jRenderCruise(now){
   for(let x=0;x<=VW;x+=12){ const tt=J.t+(x-VW*.25)/(VW*.6)*3; const y=jPathY(tt); x?ctx.lineTo(x,y):ctx.moveTo(x,y); } ctx.stroke(); ctx.setLineDash([]);
   // debris
   J.deb.forEach(d=>{ ctx.save(); ctx.translate(d.x,d.y); ctx.rotate(d.spin); ctx.fillStyle='#8d867d'; ctx.beginPath(); ctx.moveTo(-d.r,0); ctx.lineTo(-d.r*.3,-d.r*.8); ctx.lineTo(d.r*.7,-d.r*.5); ctx.lineTo(d.r,d.r*.3); ctx.lineTo(0,d.r); ctx.closePath(); ctx.fill(); ctx.restore(); });
-  // the rocket, flying nose-first toward Mars
+  // the rocket, flying nose-first toward Mars (it blinks for a moment after an asteroid hit)
+  if(!(J.inv>0&&Math.floor(now/110)%2)){
   ctx.save(); ctx.translate(VW*.25,J.y); ctx.rotate(Math.PI/2+clamp(J.vy/VH,-.35,.35));
   jRocket(0,0,1.15,2,0);
   // steady cruise glow from the main engine
@@ -2041,6 +2317,7 @@ function jRenderCruise(now){
   if((K.jump||K.brake)&&!J.shelter&&J.fuel>0){ ctx.fillStyle='#fff6c0'; ctx.fillRect(K.jump?8:-14,-4,6,6); }
   if(J.shelter){ ctx.fillStyle='#ffb21f'; ctx.fillRect(-3,-16,6,6); }
   ctx.restore();
+  }
   if(J.flare&&J.flare.ph==='on'){ for(let i=0;i<30;i++){ ctx.fillStyle=Math.random()<.5?'rgba(255,255,255,.8)':'rgba(255,120,220,.8)'; ctx.fillRect(Math.random()*VW,Math.random()*VH,2,2);} ctx.fillStyle='rgba(200,80,255,.07)'; ctx.fillRect(0,0,VW,VH); }
 }
 function jRenderEDL(now){
@@ -2264,7 +2541,7 @@ function updRover(dt){
     say('Rover','We rolled over! The crew used the winch arm to flip the rover back onto its wheels. That cost 10 minutes, 1 kWh and shook up the cargo.','warn');
   }
   if(rv.faults.nav>0) rv.faults.nav-=dt;
-  if(!rv.air&&Math.abs(rv.v.x)>1.5&&Math.random()<.5){
+  if(!SET.ldm&&!rv.air&&Math.abs(rv.v.x)>1.5&&Math.random()<.5){
     const ws=[...rv.wh].sort((a,b)=>a.q.x-b.q.x), w=rv.v.x>0?ws[0]:ws[ws.length-1]; G.particles.push({x:w.q.x,y:w.q.y+WRAD*.8,vx:-rv.v.x*.15+(Math.random()-.5),vy:-Math.random()*1.5,life:.8,max:.8,c:tileColor(w.mat),s:.25});
   }
 }
@@ -2422,7 +2699,7 @@ function endMission(won,why){
 let VW=0,VH=0,DPR=1,TS=24;
 const lc=document.createElement('canvas'), lx=lc.getContext('2d');
 function resize(){
-  DPR=Math.min(1.5,devicePixelRatio||1); VW=innerWidth; VH=innerHeight;
+  DPR=SET.ldm?1:Math.min(1.5,devicePixelRatio||1); VW=innerWidth; VH=innerHeight;
   cv.width=Math.round(VW*DPR); cv.height=Math.round(VH*DPR);
   lc.width=Math.max(1,Math.round(cv.width/2)); lc.height=Math.max(1,Math.round(cv.height/2));
   TS=Math.round(clamp(Math.min(VH/24,VW/30),16,32));
@@ -2432,8 +2709,49 @@ const STARS=Array.from({length:120},()=>({x:Math.random(),y:Math.random()*.7,s:M
 const HILLS=[0,1].map(L=>{const a=[];const r=rng(99+L);let v=0;for(let i=0;i<800;i++){v+=(r()-.5)*1.4;v*=.97;a.push(v+Math.sin(i*.05+L)*3+Math.sin(i*.013)*5);}return a;});
 const sx=x=>(x-G.cam.x)*TS+VW/2, sy=y=>(y-G.cam.y)*TS+VH/2;
 
+/* ---- menu backdrop: Mars seen from orbit, slowly turning ---- */
+const MCR=Array.from({length:26},(_,i)=>{ const r=rng(500+i); return {u:r(),v:.08+r()*.7,r:.012+r()*.05,d:.25+r()*.35}; });
+const MBANDS=Array.from({length:9},(_,i)=>{ const r=rng(900+i); return {u:r(),v:.08+r()*.6,rx:.12+r()*.22,ry:.05+r()*.09,a:.14+r()*.16,dark:r()<.7}; });
+function drawMenuBackdrop(now){
+  // neon Mars: a black sky and a glowing orange planet drawn in light
+  const T=now/1000, glow=!SET.ldm;
+  ctx.fillStyle='#030104'; ctx.fillRect(0,0,VW,VH);
+  const haze=ctx.createRadialGradient(VW*.5,VH,0,VW*.5,VH,Math.max(VW,VH)*.9); haze.addColorStop(0,'rgba(255,90,20,.18)'); haze.addColorStop(1,'rgba(255,90,20,0)'); ctx.fillStyle=haze; ctx.fillRect(0,0,VW,VH);
+  if(glow) STARS.forEach((s,i)=>{ const tw=.5+.5*Math.sin(T*(.6+i%5*.3)+i); ctx.fillStyle=i%7===0?`rgba(255,170,90,${.3+.6*tw})`:`rgba(255,248,240,${.2+.6*tw})`; ctx.fillRect(((s.x*VW+T*3*(1+i%3))%VW+VW)%VW,s.y*VH*.95,s.s,s.s); });
+  const R=Math.max(VW*.62,VH*.75), cx=VW*.5, cy=VH*.62+R, top=cy-R;
+  // outer neon glow
+  ctx.save();
+  if(glow){ ctx.shadowColor='#ff6a1a'; ctx.shadowBlur=45; }
+  ctx.strokeStyle='#ff7a2a'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip();
+  const pg=ctx.createRadialGradient(cx-R*.3,top+R*.2,0,cx,cy,R); pg.addColorStop(0,'#3a0f05'); pg.addColorStop(.5,'#1a0603'); pg.addColorStop(1,'#060102'); ctx.fillStyle=pg; ctx.fillRect(cx-R,top,R*2,R*2);
+  if(glow){ ctx.shadowColor='#ff5a10'; ctx.shadowBlur=12; }
+  // latitude lines
+  ctx.lineWidth=1.5;
+  for(let k=1;k<=9;k++){ const y=top+R*(k*.09)**1.25*1.6; if(y>top+R*1.2) break; const dy=cy-y, hw=Math.sqrt(Math.max(0,R*R-dy*dy));
+    ctx.strokeStyle=`rgba(255,120,40,${.55-k*.035})`; ctx.beginPath(); ctx.ellipse(cx,y+hw*.06,hw,hw*.06,0,Math.PI,0,true); ctx.stroke(); }
+  // longitude lines that turn with the planet
+  const rot=(T*.04)%(Math.PI/6);
+  for(let k=-6;k<=6;k++){ const a=k*Math.PI/12+rot; if(Math.abs(a)>=Math.PI/2) continue; const rx=Math.abs(Math.sin(a))*R;
+    ctx.strokeStyle=`rgba(255,130,50,${.18+.35*Math.cos(a)})`; ctx.beginPath(); ctx.ellipse(cx,cy,Math.max(1,rx),R,0,a<0?Math.PI*.5:-Math.PI*.5,a<0?Math.PI*1.5:Math.PI*.5,false); ctx.stroke(); }
+  // neon craters and an ice cap
+  const crot=(T*.006)%1;
+  MCR.forEach(c=>{ for(const off of [0,1]){ const x=cx-R+(((c.u-crot+off)%2+2)%2)*R*2; if(x<cx-R-50||x>cx+R+50) continue; const y=top+c.v*R, rr=c.r*R;
+    ctx.strokeStyle=`rgba(255,${150+((c.u*100)|0)},70,${.5+c.d})`; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(x,y,rr,rr*.55,0,0,Math.PI*2); ctx.stroke(); } });
+  if(glow){ ctx.shadowColor='#bff3ff'; ctx.shadowBlur=18; }
+  ctx.strokeStyle='rgba(220,250,255,.9)'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.ellipse(cx+R*.04,top+R*.012,R*.11,R*.022,0,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+  // bright rim line on top
+  ctx.save(); if(glow){ ctx.shadowColor='#ffb36b'; ctx.shadowBlur=20; } ctx.strokeStyle='rgba(255,200,140,.9)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(cx,cy,R-1,Math.PI*1.08,Math.PI*1.92); ctx.stroke(); ctx.restore();
+  // Phobos and Deimos as little neon rings
+  const moon=(px,py,r,c)=>{ ctx.save(); if(glow){ ctx.shadowColor=c; ctx.shadowBlur=14; } ctx.strokeStyle=c; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(px,py,r,r*.75,.4,0,Math.PI*2); ctx.stroke(); ctx.restore(); };
+  moon(((T*14)%(VW+200))-100,VH*.18+Math.sin(T*.2)*10,10,'#5fd4ff');
+  moon(VW-(((T*6)+VW*.4)%(VW+120))+60,VH*.3,6,'#ff9a5a');
+}
 function render(now){
   ctx.setTransform(DPR,0,0,DPR,0,0); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; ctx.setLineDash([]);
+  if(G.state==='title'){ drawMenuBackdrop(now); return; }
   ctx.imageSmoothingEnabled=false;
   // camera
   let fx,fy;
@@ -2447,7 +2765,7 @@ function render(now){
   const top=mixA(mixA([16,10,22],[196,132,92],L),[110,72,48],s*.85), hor=mixA(mixA([44,26,38],[232,190,140],L),[150,98,62],s*.85);
   const gr=ctx.createLinearGradient(0,0,0,VH); gr.addColorStop(0,rgb(top)); gr.addColorStop(.75,rgb(hor)); gr.addColorStop(1,rgb(hor));
   ctx.fillStyle=gr; ctx.fillRect(0,0,VW,VH);
-  if(L<.9){ ctx.fillStyle=`rgba(255,250,240,${(1-L)*(1-s)*.85})`; STARS.forEach(st=>ctx.fillRect(st.x*VW,st.y*VH,st.s,st.s)); }
+  if(L<.9&&!SET.ldm){ ctx.fillStyle=`rgba(255,250,240,${(1-L)*(1-s)*.85})`; STARS.forEach(st=>ctx.fillRect(st.x*VW,st.y*VH,st.s,st.s)); }
   // sun
   const sunX=VW*clamp((h-6)/12.6,-.1,1.1), sunY=VH*.78-Math.sin(Math.PI*clamp((h-6.2)/12.2,0,1))*VH*.62;
   const tw=clamp(1-Math.abs(h-18.1)/1.3,0,1)+clamp(1-Math.abs(h-6.3)/1.2,0,1);
@@ -2456,7 +2774,7 @@ function render(now){
   // Phobos
   { const px=((G.t*.9)%400)/400*VW*1.4-VW*.2; ctx.fillStyle=`rgba(200,180,160,${.8*(1-s)})`; ctx.beginPath(); ctx.ellipse(px,VH*.14,4,3,.3,0,7); ctx.fill(); }
   // hills
-  HILLS.forEach((arr,L2)=>{
+  if(!SET.ldm) HILLS.forEach((arr,L2)=>{
     const par=L2?.35:.18, base=VH*(L2?.56:.5), amp=TS*(L2?.9:1.3);
     const col=mixA(L2?[120,52,30]:[150,78,50],hor,L2?.35:.55);
     ctx.fillStyle=rgb(mixA(col,[30,18,22],(1-L)*.7));
@@ -2485,7 +2803,7 @@ function render(now){
       ctx.drawImage(SPR[t][v],px,py,ts,ts);
       if(t!==T.HULL&&t!==T.GLASS&&t!==T.ROCK){
         const surf=(roofTop[x]>=0&&y<=36)?roofTop[x]:floorA[x];
-        const d=y-surf; if(d>1){ ctx.fillStyle=DEPTH_SHADE[Math.min(15,d)]; ctx.fillRect(px,py,ts,ts); }
+        const d=y-surf; if(d>1&&!SET.ldm){ ctx.fillStyle=DEPTH_SHADE[Math.min(15,d)]; ctx.fillRect(px,py,ts,ts); }
       }
     }
   }
@@ -2520,13 +2838,13 @@ function render(now){
   }
   drawLight(L,s);
   // warm glow around placed lamps
-  if(G.lamps.length){ ctx.save(); ctx.globalCompositeOperation='lighter';
+  if(G.lamps.length&&!SET.ldm){ ctx.save(); ctx.globalCompositeOperation='lighter';
     G.lamps.forEach(([lx_,ly_])=>{ const X=sx(lx_+.5),Y=sy(ly_+.5), R=TS*9; if(X<-R||X>VW+R||Y<-R||Y>VH+R) return;
       const g=ctx.createRadialGradient(X,Y,0,X,Y,R); g.addColorStop(0,'rgba(255,214,130,.55)'); g.addColorStop(.35,'rgba(255,190,100,.22)'); g.addColorStop(1,'rgba(255,170,80,0)'); ctx.fillStyle=g; ctx.fillRect(X-R,Y-R,R*2,R*2); });
     ctx.restore(); }
   // flare speckles
   if(G.flare&&G.flare.ph==='active'&&!(inTube()&&!G.eva)){
-    for(let i=0;i<26;i++){ ctx.fillStyle=Math.random()<.5?'rgba(255,255,255,.85)':'rgba(255,120,220,.8)'; ctx.fillRect(Math.random()*VW,Math.random()*VH,2,2); }
+    for(let i=0;i<(SET.ldm?0:26);i++){ ctx.fillStyle=Math.random()<.5?'rgba(255,255,255,.85)':'rgba(255,120,220,.8)'; ctx.fillRect(Math.random()*VW,Math.random()*VH,2,2); }
     ctx.fillStyle='rgba(200,80,255,.06)'; ctx.fillRect(0,0,VW,VH);
   }
   if(G.glitch>0){
@@ -2767,7 +3085,7 @@ function step(now){
     // particles & streaks always animate a little
     G.particles.forEach(p=>{ p.vy+=GRAV*.3*rdt; p.x+=p.vx*rdt; p.y+=p.vy*rdt; p.life-=rdt; });
     G.particles=G.particles.filter(p=>p.life>0); if(G.particles.length>300) G.particles.splice(0,G.particles.length-300);
-    const want=G.tau>.8?Math.floor(clamp((G.tau-.6)*25,0,160)):0;
+    const want=(G.tau>.8&&!SET.ldm)?Math.floor(clamp((G.tau-.6)*25,0,160)):0;
     while(G.streaks.length<want) G.streaks.push({x:Math.random()*VW,y:Math.random()*VH,l:20+Math.random()*50,v:400+Math.random()*500});
     if(G.streaks.length>want) G.streaks.length=want;
     G.streaks.forEach(st=>{ st.x+=st.v*rdt; st.y+=st.v*.06*rdt; if(st.x-st.l>VW){ st.x=-10; st.y=Math.random()*VH; } });
