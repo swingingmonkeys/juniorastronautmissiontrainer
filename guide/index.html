@@ -51,6 +51,10 @@ h1 span{color:var(--sand)}
 .trailer .snd:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .trailer figcaption{font-size:14px;color:#cdb8aa;margin-top:12px;overflow:hidden}
 .trailer figcaption a{color:var(--sand)}
+.narr{position:fixed;right:16px;bottom:16px;z-index:50;display:flex;align-items:center;gap:10px;background:#1b0f0bee;color:#fff;border:2px solid #e2ad6f;border-radius:999px;padding:6px 6px 6px 14px;font-size:15px;font-weight:700;box-shadow:0 8px 24px #0007}
+.narr[hidden]{display:none}
+.narr button{font:inherit;color:#fff;background:#c4501f;border:0;border-radius:999px;padding:7px 14px;cursor:pointer}
+.narr button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 section{padding:64px 0}
 section.alt{background:#eadccf}
 section.dark{background:var(--bg2);color:#f3e6dc}
@@ -510,6 +514,9 @@ footer a{color:#f2c9a8;overflow-wrap:anywhere}
   </div>
 </footer>
 
+<audio id="narr" src="audio/guide-narration.mp3" preload="auto"></audio>
+<div id="narrBar" class="narr" hidden><span class="lbl">🎙️ Guide narration</span><button type="button" id="narrBtn" aria-controls="narr">Stop</button></div>
+
 <script>
 // trailer: plays with sound. Most browsers block sound until the visitor has
 // interacted with the page, so if that happens it plays muted and turns the sound
@@ -521,13 +528,42 @@ footer a{color:#f2c9a8;overflow-wrap:anywhere}
     b.textContent=on?'🔊 Sound is on · Mute':(waiting?'🔇 Tap anywhere for sound':'🔇 Muted · Turn sound on'); };
   const evs=['pointerdown','keydown','touchstart'];
   const unlock=e=>{ evs.forEach(n=>removeEventListener(n,unlock,true)); if(!waiting) return; waiting=false; if(e&&b.contains(e.target)) return;
-    if(!chose){ v.muted=false; v.play().catch(()=>{}); } sync(); };
+    if(!chose){ if(window.__narrOn) window.__trailerWantsSound=true; else { v.muted=false; v.play().catch(()=>{}); } } sync(); };
   b.addEventListener('click',()=>{ chose=true; waiting=false; v.muted=!v.muted; if(!v.muted){ if(v.currentTime>1) v.currentTime=0; v.play().catch(()=>{}); } sync(); });
   v.addEventListener('volumechange',()=>{ if(waiting&&!v.muted) waiting=false; sync(); });
   v.muted=false;
   const p=v.play();
   if(p&&p.catch) p.catch(()=>{ v.muted=true; waiting=true; sync(); v.play().catch(()=>{}); evs.forEach(e=>addEventListener(e,unlock,true)); });
   sync();
+})();
+// guide narration (recorded by the team): starts once, 5 s after the page loads, never loops.
+// While it plays, the trailer keeps playing but is muted so the two never talk over each other.
+// If the browser blocks sound until the visitor interacts, it starts at their first click, tap or key.
+(()=>{
+  const a=document.getElementById('narr'), bar=document.getElementById('narrBar'), btn=document.getElementById('narrBtn'), v=document.getElementById('trailer');
+  if(!a||!bar||!btn) return;
+  let state='idle', ours=false, trailerHadSound=false;
+  const evs=['pointerdown','keydown','touchstart'];
+  const ui=()=>{ bar.hidden=state==='idle'||state==='done';
+    bar.querySelector('.lbl').textContent=state==='blocked'?'🔇 Tap anywhere to hear the guide narration':'🎙️ Guide narration';
+    btn.textContent=state==='playing'?'Stop':state==='paused'?'Play':'Skip';
+  };
+  const muteTrailer=on=>{ if(!v) return; ours=true; v.muted=on; ours=false; };
+  const start=()=>a.play().then(()=>{ state='playing'; ui(); }).catch(()=>{ if(state!=='blocked'){ state='blocked'; ui(); evs.forEach(e=>addEventListener(e,unlock,true)); } });
+  const unlock=e=>{ if(e&&bar.contains(e.target)) return; evs.forEach(n=>removeEventListener(n,unlock,true)); if(state==='blocked') start(); };
+  a.addEventListener('play',()=>{ window.__narrOn=true; if(v){ trailerHadSound=!v.muted; muteTrailer(true); } });
+  const release=()=>{ window.__narrOn=false; if(v&&(trailerHadSound||window.__trailerWantsSound)) muteTrailer(false); trailerHadSound=false; window.__trailerWantsSound=false; };
+  a.addEventListener('pause',()=>{ if(a.ended) return; release(); });
+  a.addEventListener('ended',()=>{ state='done'; ui(); release(); });
+  // the visitor turned the trailer's sound on: stop the narration so they don't overlap
+  if(v) v.addEventListener('volumechange',()=>{ if(!ours&&!v.muted&&state==='playing'){ trailerHadSound=false; window.__trailerWantsSound=false; a.pause(); state='paused'; ui(); } });
+  btn.addEventListener('click',()=>{
+    if(state==='playing'){ a.pause(); state='paused'; }
+    else if(state==='paused'){ start(); }
+    else if(state==='blocked'){ evs.forEach(n=>removeEventListener(n,unlock,true)); state='done'; }
+    ui();
+  });
+  addEventListener('load',()=>setTimeout(start,5000),{once:true});
 })();
 // play GIFs on click (posters keep the page light)
 document.querySelectorAll('.gif').forEach(g=>{
