@@ -135,6 +135,11 @@ kbd{display:inline-block;min-width:26px;text-align:center;font:700 13px/1 ui-mon
 .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
 .badges div{background:#fff8f1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
 .badges b{display:block;font-size:15px}
+.src-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;margin-top:18px}
+.src-grid h3{margin:0 0 8px;font-size:18px}
+.src-grid ul{margin:0;padding-left:20px;font-size:15.5px;line-height:1.5}
+.src-grid li{margin-bottom:7px}
+.src-note{font-size:14px;color:var(--muted,#7a5646);margin-top:18px}
 .tip{border-left:5px solid var(--teal);background:#e3efe9;padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0;font-size:15.5px}
 footer{background:var(--bg);color:#bba393;padding:34px 0;font-size:14.5px}
 footer a{color:#f2c9a8;overflow-wrap:anywhere}
@@ -164,6 +169,7 @@ footer a{color:#f2c9a8;overflow-wrap:anywhere}
       <a href="#planner">Planner</a>
       <a href="#hazards">Hazards</a>
       <a href="#tips">Tips</a>
+      <a href="#sources">Sources</a>
     </nav>
     <div class="hero-grid">
       <div>
@@ -501,8 +507,47 @@ footer a{color:#f2c9a8;overflow-wrap:anywhere}
       <h2>Real science inside</h2>
       <p>The game runs on a snapshot of real numbers: Mars gravity (3.71 m/s²), sunlight (~590 W/m²), oxygen use (0.84 kg per person per day, NASA's Baseline Values and Assumptions Document), surface radiation (~0.67 mSv per day measured by Curiosity's RAD), real flares like the X9.0 flare of October 3, 2024, and the 2018 planet-wide dust storm that ended Opportunity's mission.</p>
       <p>Press <b>Mars data</b> in the game at any time to read the sources. Numbers are simplified for learning; it is not a mission-planning tool.</p>
+      <p><b>Learn more:</b> <a href="https://www.asc-csa.gc.ca/eng/sciences/food-production/growing-healthy-food-in-space-and-remote-areas.asp" target="_blank" rel="noopener">Growing healthy food in space and in remote areas</a> (Canadian Space Agency: food production on the Moon and in remote communities) · <a href="https://github.com/swingingmonkeys/juniorastronautmissiontrainer/blob/main/nasa-data-references.md" target="_blank" rel="noopener">All data sources and references</a></p>
       <a class="btn" href="https://juniorastronautmissiontrainer-three.vercel.app/" target="_blank" rel="noopener">▶ Start your mission</a>
     </div>
+  </div>
+</section>
+
+<section id="sources">
+  <div class="wrap">
+    <h2>Sources</h2>
+    <p class="sub">The real numbers and events behind the game, and where they come from.</p>
+    <div class="src-grid">
+      <div>
+        <h3>Core numbers the game runs on</h3>
+        <ul>
+          <li><b>Mars gravity, 3.71 m/s²</b>: <a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html" target="_blank" rel="noopener">NASA Mars Fact Sheet</a>. The sheet lists 3.73 m/s² as the mean; 3.71 m/s² is the equatorial value. The same sheet gives the sunlight figure (586 W/m², about 590 in the game).</li>
+          <li><b>Oxygen, 0.84 kg per person per day</b>: <a href="https://ntrs.nasa.gov/citations/20180001338" target="_blank" rel="noopener">NASA Life Support Baseline Values and Assumptions Document (BVAD), 2018</a></li>
+          <li><b>Surface radiation, about 0.67 mSv per day</b>: Curiosity's RAD instrument, <a href="https://ntrs.nasa.gov/citations/20180007641" target="_blank" rel="noopener">Hassler et al. 2014, <i>Science</i></a></li>
+          <li><b>Radiation limit, 600 mSv</b>: NASA's career limit for astronauts</li>
+          <li><b>Five real solar flares</b> (September 2017, February, May and October 2024): NASA's <a href="https://kauai.ccmc.gsfc.nasa.gov/DONKI" target="_blank" rel="noopener">DONKI space weather database</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Real mission events</h3>
+        <ul>
+          <li><b>Opportunity</b>: the 2018 planet-wide dust storm (opacity τ ≈ 10.8) that ended the mission</li>
+          <li><b>Spirit</b>: stuck in soft sand at "Troy" (2009)</li>
+          <li><b>Curiosity</b>: aluminum wheels punctured by sharp rocks (from 2013); the radiation measured during the May 2024 solar storm</li>
+          <li><b>Perseverance</b>: launch (July 30, 2020), landing (February 18, 2021) and its entry, descent and landing</li>
+          <li><b>Mars Reconnaissance Orbiter</b>: buried ice, opal and lava-tube "skylights"</li>
+          <li><b>Phoenix</b>: perchlorate salts in Mars soil (2008)</li>
+          <li><b>Kilopower (KRUSTY)</b>: small fission reactor test (2018)</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Food in space</h3>
+        <ul>
+          <li><a href="https://www.asc-csa.gc.ca/eng/sciences/food-production/growing-healthy-food-in-space-and-remote-areas.asp" target="_blank" rel="noopener">Growing healthy food in space and in remote areas</a> (Canadian Space Agency): food production on the Moon and in remote communities</li>
+        </ul>
+      </div>
+    </div>
+    <p class="src-note">Numbers are simplified for learning; the game is not a mission-planning tool and is not produced or endorsed by NASA or the CSA. Full list with every reference: <a href="https://github.com/swingingmonkeys/juniorastronautmissiontrainer/blob/main/nasa-data-references.md" target="_blank" rel="noopener">nasa-data-references.md</a>.</p>
   </div>
 </section>
 

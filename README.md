@@ -80,6 +80,8 @@ The game runs on a snapshot of real numbers and events (1 real second = 1 missio
 - The 2018 planet-wide dust storm (opacity τ ≈ 10.8) that ended the Opportunity mission
 - Spirit stuck at "Troy" (2009), Curiosity wheel damage (2013), Phoenix perchlorate (2008), Opportunity's hematite "blueberries", MRO opal (2008), Curiosity's "Egg Rock" meteorite (2016), ICON's Mars Dune Alpha habitat, NASA Langley's Mars Ice Home concept
 
+Full list of sources with links: [nasa-data-references.md](nasa-data-references.md). Further reading on food production: [Canadian Space Agency: Growing healthy food in space and in remote areas](https://www.asc-csa.gc.ca/eng/sciences/food-production/growing-healthy-food-in-space-and-remote-areas.asp).
+
 Numbers are simplified for learning. This is not a mission-planning tool, and it is not produced or endorsed by NASA.
 
 ## Tech
