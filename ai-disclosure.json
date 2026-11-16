@@ -18,7 +18,7 @@
     { "kind": "text", "paths": ["README.md", "AI_DISCLOSURE.md"], "use": "Documentation drafted with SI" }
   ],
   "audioFiles": true,
-  "audioNote": "Only audio: the trailer's original background music, synthesized by an SI-written script (no samples, no third-party music, no voices).",
+  "audioNote": "Trailer music: original, synthesized by an SI-written script (no samples, no voices). Guide narration (guide/audio/guide-narration.mp3): human voices recorded by adult team members, not SI-generated; SI only joined the two takes and levelled the volume.",
   "nasaBrandingUsed": false,
   "details": "AI_DISCLOSURE.md"
 }
